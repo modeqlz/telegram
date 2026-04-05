@@ -393,7 +393,14 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
       </div>
 
       {((!banner.title || banner.title.trim() === "") && (!banner.buttonText || banner.buttonText.trim() === "") && banner.image) ? (
-        <div className="promo-banner-standalone" style={{ position: 'relative' }}>
+        <div className="promo-banner-standalone" style={{ position: 'relative', cursor: banner.link ? 'pointer' : 'default' }} onClick={(e) => {
+          if (e.target.tagName.toLowerCase() !== 'button' && e.target.closest('button') == null) {
+            if (banner.link && banner.link !== "") {
+               if (banner.link === 'dressup') { handleNavClick('dressup'); }
+               else if (banner.link === 'Все' || CATEGORIES.includes(banner.link)) { setActiveCategory(banner.link); document.querySelector('.products-grid')?.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+            }
+          }
+        }}>
           {isVideo ? (
              <video src={banner.image} autoPlay loop muted={isMuted} playsInline className="promo-image-standalone" style={{pointerEvents: 'auto'}} />
           ) : (
@@ -423,7 +430,12 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
             </h2>
           )}
           {banner.buttonText && banner.buttonText.trim() !== "" && (
-            <button className="promo-btn" style={{marginTop: '12px'}}>{banner.buttonText}</button>
+            <button className="promo-btn" style={{marginTop: '12px'}} onClick={() => {
+              if (banner.link && banner.link !== "") {
+                 if (banner.link === 'dressup') { handleNavClick('dressup'); }
+                 else if (banner.link === 'Все' || CATEGORIES.includes(banner.link)) { setActiveCategory(banner.link); document.querySelector('.products-grid')?.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+              }
+            }}>{banner.buttonText}</button>
           )}
           
           {banner.image ? (
@@ -761,6 +773,21 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
               value={banner.buttonText} 
               onChange={e => setBanner({...banner, buttonText: e.target.value})} 
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Куда ведет клик по баннеру (Ссылка)</label>
+            <select 
+              className="form-select" 
+              value={banner.link || ""} 
+              onChange={e => setBanner({...banner, link: e.target.value})}
+            >
+              <option value="">Никуда (Только картинка)</option>
+              <option value="dressup">Сборка образа (Dressup)</option>
+              {['Все', ...CATEGORIES].map(cat => (
+                <option key={cat} value={cat}>Каталог: {cat}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group" style={{marginBottom: 0}}>
