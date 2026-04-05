@@ -185,7 +185,7 @@ function FavoritesView({ products, openDetails, favorites, toggleFavorite, activ
         {products.length === 0 ? (
           <div className="empty-state">
             <p>У вас пока нет избранных товаров.</p>
-            <p style={{fontSize: '0.85rem', marginTop: '8px'}}>Нажмите на сердечко ❤️ в каталоге, чтобы сохранить товар сюда.</p>
+            <p style={{fontSize: '0.85rem', marginTop: '8px'}}>Нажмите на сердечко в каталоге, чтобы сохранить товар сюда.</p>
           </div>
         ) : (
           products.map(product => (
