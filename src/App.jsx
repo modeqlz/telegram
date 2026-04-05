@@ -803,14 +803,23 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
               <div style={{fontSize: '0.85rem'}}>Загрузить графику/видео баннера</div>
             </div>
             {banner.image && (
-              <div style={{marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px'}}>
-                {banner.isVideo || banner.image.startsWith('data:video') ? (
-                   <video src={banner.image} style={{height: '60px', borderRadius: '8px', background: 'black'}} />
-                ) : (
-                   <img src={banner.image} style={{height: '60px', borderRadius: '8px', objectFit: 'contain', background: 'var(--primary)'}} />
-                )}
-                <button type="button" className="remove-color-btn" onClick={() => setBanner({...banner, image: "", isVideo: false})}>
-                  <X size={16} style={{marginRight: '4px'}}/> Удалить
+              <div style={{marginTop: '20px'}}>
+                <div style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600}}>Предпросмотр (как выглядит на главной):</div>
+                <div className="promo-banner-standalone" style={{ minHeight: '180px', pointerEvents: 'none', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', background: 'black' }}>
+                    {banner.isVideo || banner.image.startsWith('data:video') ? (
+                       <video src={banner.image} autoPlay loop muted playsInline className="promo-image-standalone" style={{objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0}} />
+                    ) : (
+                       <img src={banner.image} alt="Promo" className="promo-image-standalone" style={{objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0}} />
+                    )}
+                    {banner.title && banner.title.trim() !== "" && (
+                      <h2 style={{position: 'relative', zIndex: 2, padding: '20px', color: 'white', whiteSpace: 'pre-line', margin: 0, fontSize: '1.4rem'}}>{banner.title}</h2>
+                    )}
+                    {banner.buttonText && banner.buttonText.trim() !== "" && (
+                      <button className="promo-btn" style={{position: 'absolute', bottom: '20px', left: '20px', zIndex: 2, padding: '8px 16px', fontSize: '0.8rem'}}>{banner.buttonText}</button>
+                    )}
+                </div>
+                <button type="button" className="remove-color-btn" style={{marginTop: '12px', justifyContent: 'center', width: '100%'}} onClick={() => setBanner({...banner, image: "", isVideo: false})}>
+                  <X size={16} style={{marginRight: '4px'}}/> Удалить картинку
                 </button>
               </div>
             )}
@@ -1122,7 +1131,51 @@ function DressupView({ products, addToCart, showToast }) {
         </div>
       </div>
 
-      <div style={{ padding: '30px 20px', textAlign: 'center' }}>
+      {/* Floating Chosen Outfit Preview */}
+      {(selectedTop || selectedBottom || selectedShoe) && (
+        <div style={{
+          position: 'sticky',
+          bottom: '20px',
+          margin: '0 auto 20px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '100px',
+          padding: '8px 16px',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          width: 'max-content',
+          zIndex: 50,
+          border: '1px solid rgba(0,0,0,0.05)'
+        }}>
+          {[
+            { item: selectedTop, setter: setSelectedTop },
+            { item: selectedBottom, setter: setSelectedBottom },
+            { item: selectedShoe, setter: setSelectedShoe }
+          ].map(({ item, setter }, i) => item && (
+            <div key={i} style={{ position: 'relative' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#f5f5f5' }}>
+                <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <button 
+                onClick={() => setter(null)}
+                style={{
+                  position: 'absolute', top: '-4px', right: '-4px', background: 'rgba(0,0,0,0.5)', 
+                  color: 'white', border: '2px solid white', borderRadius: '50%', width: '18px', height: '18px', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer'
+                }}
+              >
+                <X size={10} strokeWidth={3} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ padding: '0 20px 40px', textAlign: 'center' }}>
         <button 
           onClick={handleBuyOutfit}
           style={{
