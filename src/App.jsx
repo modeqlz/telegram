@@ -234,7 +234,7 @@ function App() {
           />
         )}
       </div>
-      {view !== 'details' && view !== 'admin' && (
+      {view !== 'details' && (
         <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount}/>
       )}
     </div>
@@ -1134,41 +1134,43 @@ function DressupView({ products, addToCart, showToast }) {
       {/* Floating Chosen Outfit Preview */}
       {(selectedTop || selectedBottom || selectedShoe) && (
         <div style={{
-          position: 'sticky',
-          bottom: '20px',
-          margin: '0 auto 20px',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          borderRadius: '100px',
-          padding: '8px 16px',
+          position: 'fixed',
+          bottom: '100px',
+          left: '20px',
+          background: '#ffffff',
+          borderRadius: '50px',
+          padding: '10px 16px',
           display: 'flex',
-          gap: '12px',
           alignItems: 'center',
-          justifyContent: 'center',
           boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          width: 'max-content',
           zIndex: 50,
-          border: '1px solid rgba(0,0,0,0.05)'
+          border: '1px solid #E5E7EB'
         }}>
           {[
-            { item: selectedTop, setter: setSelectedTop },
-            { item: selectedBottom, setter: setSelectedBottom },
-            { item: selectedShoe, setter: setSelectedShoe }
-          ].map(({ item, setter }, i) => item && (
-            <div key={i} style={{ position: 'relative' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#f5f5f5' }}>
+            { item: selectedTop, setter: setSelectedTop, rot: -8, ml: '0px', z: 3 },
+            { item: selectedBottom, setter: setSelectedBottom, rot: 5, ml: '-16px', z: 2 },
+            { item: selectedShoe, setter: setSelectedShoe, rot: -4, ml: '-16px', z: 1 }
+          ].map(({ item, setter, rot, ml, z }, i) => item && (
+            <div key={i} style={{ 
+              position: 'relative', 
+              marginLeft: ml,
+              zIndex: z,
+              transform: `rotate(${rot}deg)`,
+              transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', background: '#f5f5f5',  boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                 <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <button 
                 onClick={() => setter(null)}
                 style={{
-                  position: 'absolute', top: '-4px', right: '-4px', background: 'rgba(0,0,0,0.5)', 
-                  color: 'white', border: '2px solid white', borderRadius: '50%', width: '18px', height: '18px', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer'
+                  position: 'absolute', top: '-4px', right: '-4px', background: 'var(--primary)', 
+                  color: 'white', border: '2px solid white', borderRadius: '50%', width: '20px', height: '20px', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}
               >
-                <X size={10} strokeWidth={3} />
+                <X size={12} strokeWidth={3} />
               </button>
             </div>
           ))}
