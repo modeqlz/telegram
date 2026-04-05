@@ -1098,25 +1098,37 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   cursor: pointer;
   flex-shrink: 0;
+
+  /* Unselected clothing: smaller and semi-transparent */
+  transform: scale(0.85);
+  opacity: 0.6;
 }
 
 .dressup-item img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: all 0.3s ease;
-  /* Brutal contrast push to blow out light gray studio backgrounds into pure white, avoiding square bounding boxes */
-  filter: contrast(1.15) brightness(1.08); 
-  mix-blend-mode: darken; /* Darken perfectly removes white/gray backgrounds on a white container */
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  mix-blend-mode: multiply;
+  
+  /* Unselected clothing: slightly grayer */
+  filter: grayscale(60%);
+}
+
+.dressup-item.selected {
+  /* Selected clothing: bigger and highly visible */
+  transform: scale(1.15);
+  opacity: 1;
+  z-index: 10;
 }
 
 .dressup-item.selected img {
-  /* Subtle indicator, no intense scaling to avoid zoom-pop feeling */
-  filter: contrast(1.2) brightness(1.1) drop-shadow(0 12px 24px rgba(0,0,0,0.1));
-  transform: translateY(-4px); 
+  opacity: 1;
+  /* Selected clothing: full vibrant color */
+  filter: grayscale(0%);
 }
 
 .dressup-check {

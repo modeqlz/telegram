@@ -838,30 +838,17 @@ function DressupView({ products, addToCart, showToast }) {
   const [selectedBottom, setSelectedBottom] = useState(bottoms[0] || null);
   const [selectedShoe, setSelectedShoe] = useState(shoes[0] || null);
 
-  const performSmoothScroll = (container, targetLeft, duration = 350) => {
-    const startLeft = container.scrollLeft;
-    const distance = targetLeft - startLeft;
-    let startTime = null;
-    
-    const animation = (currentTime) => {
-      if (startTime === null) startTime = currentTime;
-      const timeElapsed = currentTime - startTime;
-      const progress = Math.min(timeElapsed / duration, 1);
-      const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-      container.scrollLeft = startLeft + distance * ease;
-      if (timeElapsed < duration) {
-        requestAnimationFrame(animation);
-      }
-    };
-    requestAnimationFrame(animation);
-  };
-
   const handleSelect = (e, item, setter) => {
     setter(item);
     const element = e.currentTarget;
     const container = element.parentElement;
     const targetScroll = element.offsetLeft - (container.offsetWidth / 2) + (element.offsetWidth / 2);
-    performSmoothScroll(container, targetScroll);
+    
+    // Hardware accelerated native smooth scroll, eliminates JS loop conflicts with scroll-snap
+    container.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth'
+    });
   };
 
   const handleBuyOutfit = () => {
