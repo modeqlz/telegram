@@ -1135,7 +1135,7 @@ function DressupView({ products, addToCart, showToast }) {
       {(selectedTop || selectedBottom || selectedShoe) && (
         <div style={{
           position: 'fixed',
-          bottom: '100px',
+          bottom: '120px',
           left: '20px',
           background: '#ffffff',
           borderRadius: '50px',
@@ -1177,7 +1177,7 @@ function DressupView({ products, addToCart, showToast }) {
         </div>
       )}
 
-      <div style={{ padding: '0 20px 40px', textAlign: 'center' }}>
+      <div style={{ padding: '0 20px 100px', textAlign: 'center' }}>
         <button 
           onClick={handleBuyOutfit}
           style={{
