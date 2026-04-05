@@ -178,7 +178,7 @@ function App() {
           {toast}
         </div>
       )}
-      <div key={view + (selectedProduct ? selectedProduct.id : '')} className="page-transition">
+      <div key={view + (selectedProduct ? selectedProduct.id : '')}>
         {view === 'admin' ? (
           <AdminView 
             products={products}
@@ -265,7 +265,7 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
   };
 
   return (
-    <div className="cart-page" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
+    <div className="cart-page page-transition" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
       <header className="header" style={{position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 10}}>
         <button className="icon-btn" onClick={() => handleNavClick('home')}><ArrowLeft size={20} /></button>
         <div className="app-logo" style={{fontSize: '1.2rem'}}>Корзина</div>
@@ -544,7 +544,7 @@ function DetailsView({ product, goBack, favorites, toggleFavorite, addToCart }) 
   const images = allImages.length > 1 ? allImages.slice(1) : allImages;
 
   return (
-    <div className="details-page">
+    <div className="details-page page-transition">
       <header className="header">
         <button className="icon-btn" onClick={goBack}><ArrowLeft size={20} /></button>
         <div className="app-logo" style={{fontSize: '1.1rem'}}>О товаре</div>
@@ -632,6 +632,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
   const [description, setDescription] = useState('');
   const [sizesRaw, setSizesRaw] = useState('');
   const [images, setImages] = useState([]);
+
 
   // Safe Banner Image/Video Upload avoiding Base64 overhead for large videos
   const handleBannerImageUpload = (e) => {
@@ -1097,7 +1098,7 @@ function DressupView({ products, addToCart, showToast }) {
 
   return (
     <>
-    <div className="dressup-view">
+    <div className="dressup-view page-transition">
       <div className="dressup-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 20px', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Dressup</h2>
       </div>
@@ -1187,42 +1188,41 @@ function DressupView({ products, addToCart, showToast }) {
       {(selectedTop || selectedBottom || selectedShoe) && (
         <div style={{
           position: 'fixed',
-          bottom: '120px',
+          bottom: 'calc(80px + env(safe-area-inset-bottom, 24px))',
           left: '20px',
           background: '#ffffff',
           borderRadius: '50px',
-          padding: '10px 16px',
+          padding: '8px 16px',
           display: 'flex',
           alignItems: 'center',
           boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          zIndex: 50,
+          zIndex: 200,
           border: '1px solid #E5E7EB'
         }}>
           {[
-            { item: selectedTop, setter: setSelectedTop, rot: -8, ml: '0px', z: 3 },
-            { item: selectedBottom, setter: setSelectedBottom, rot: 5, ml: '-16px', z: 2 },
-            { item: selectedShoe, setter: setSelectedShoe, rot: -4, ml: '-16px', z: 1 }
-          ].map(({ item, setter, rot, ml, z }, i) => item && (
+            { item: selectedTop, setter: setSelectedTop, ml: '0px', z: 3 },
+            { item: selectedBottom, setter: setSelectedBottom, ml: '-12px', z: 2 },
+            { item: selectedShoe, setter: setSelectedShoe, ml: '-12px', z: 1 }
+          ].map(({ item, setter, ml, z }, i) => item && (
             <div key={i} style={{ 
               position: 'relative', 
               marginLeft: ml,
               zIndex: z,
-              transform: `rotate(${rot}deg)`,
               transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', background: '#f5f5f5',  boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', background: '#f5f5f5',  boxShadow: '0 2px 8px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(0.8)' }} />
               </div>
               <button 
                 onClick={() => setter(null)}
                 style={{
-                  position: 'absolute', top: '-4px', right: '-4px', background: 'var(--primary)', 
-                  color: 'white', border: '2px solid white', borderRadius: '50%', width: '20px', height: '20px', 
+                  position: 'absolute', top: '-2px', right: '-2px', background: '#e5e7eb', 
+                  color: '#666', border: '2px solid white', borderRadius: '50%', width: '18px', height: '18px', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
               >
-                <X size={12} strokeWidth={3} />
+                <X size={10} strokeWidth={3} />
               </button>
             </div>
           ))}
