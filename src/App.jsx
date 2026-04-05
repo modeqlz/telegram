@@ -37,23 +37,26 @@ function App() {
     return { title: "Зимняя\nраспродажа\nдо 40%", buttonText: "Смотреть", image: "", isVideo: false };
   });
 
-  const [cartCount, setCartCount] = useState(() => {
-    return parseInt(localStorage.getItem('redwear_cart') || "0");
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('redwear_cart_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem('redwear_banner', JSON.stringify(banner));
+      localStorage.setItem('redwear_cart_items', JSON.stringify(cartItems));
     } catch (e) {
-      console.warn("Storage Quota Exceeded for Banner. Video may be too large.");
+      console.warn("Storage Quota Exceeded");
     }
-  }, [banner]);
+  }, [cartItems]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('redwear_cart', cartCount.toString());
-    } catch (e) { }
-  }, [cartCount]);
+  const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
+
+  // Removed old cart localstorage effect
 
   const [view, setView] = useState('home'); 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -144,14 +147,22 @@ function App() {
       setView('favorites');
     } else if (navItem === 'dressup') {
       setView('dressup');
+    } else if (navItem === 'cart') {
+      setView('cart');
     } else {
       setView('home');
     }
   };
 
-  const addToCart = (qty) => {
-    setCartCount(cartCount + qty);
-    showToast(`В корзину добавлено ${qty} шт.`);
+  const addToCart = (product, qty = 1, size = null, silent = false) => {
+    setCartItems(prev => {
+      const existing = prev.find(item => item.id === product.id && item.selectedSize === size);
+      if (existing) {
+        return prev.map(item => item === existing ? { ...item, qty: item.qty + qty } : item);
+      }
+      return [{ ...product, cartId: Date.now().toString() + Math.random(), qty, selectedSize: size }, ...prev];
+    });
+    if (!silent) showToast(`В корзину добавлено ${qty} шт.`);
   };
 
   return (
@@ -193,6 +204,15 @@ function App() {
             handleNavClick={handleNavClick}
             cartCount={cartCount}
           />
+        ) : view === 'cart' ? (
+          <CartView 
+            cartItems={cartItems}
+            setCartItems={setCartItems}
+            goBack={goBack}
+            activeNav={activeNav}
+            handleNavClick={handleNavClick}
+            cartCount={cartCount}
+          />
         ) : view === 'dressup' ? (
           <DressupView
             products={products}
@@ -214,9 +234,85 @@ function App() {
           />
         )}
       </div>
-      {view !== 'details' && view !== 'admin' && (
+      {view !== 'details' && view !== 'admin' && view !== 'cart' && (
         <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount}/>
       )}
+    </div>
+  );
+}
+
+function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }) {
+  const total = cartItems.reduce((acc, item) => acc + (parseFloat(item.price) * item.qty), 0);
+
+  const removeItem = (cartId) => {
+    setCartItems(prev => prev.filter(item => item.cartId !== cartId));
+  };
+
+  const updateQty = (cartId, delta) => {
+    setCartItems(prev => prev.map(item => {
+      if (item.cartId === cartId) {
+        const newQty = Math.max(1, item.qty + delta);
+        return { ...item, qty: newQty };
+      }
+      return item;
+    }));
+  };
+
+  return (
+    <div className="cart-page" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
+      <header className="header" style={{position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 10}}>
+        <button className="icon-btn" onClick={() => handleNavClick('home')}><ArrowLeft size={20} /></button>
+        <div className="app-logo" style={{fontSize: '1.2rem'}}>Корзина</div>
+        <div style={{width: 44}}></div>
+      </header>
+
+      <div className="cart-content" style={{padding: '20px', flex: 1}}>
+        {cartItems.length === 0 ? (
+          <div className="empty-state" style={{marginTop: '40px'}}>
+            <ShoppingBag size={48} style={{margin: '0 auto 16px', color: '#ccc'}} />
+            <p>Ваша корзина пуста.</p>
+            <button className="btn-primary" style={{marginTop: '24px'}} onClick={() => handleNavClick('home')}>На главную</button>
+          </div>
+        ) : (
+          <>
+            <div className="cart-items-list" style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+              {cartItems.map(item => (
+                <div key={item.cartId} style={{display: 'flex', gap: '16px', background: 'white', padding: '12px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)'}}>
+                  <div style={{width: '80px', height: '80px', flexShrink: 0, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#f5f5f5'}}>
+                    <img src={item.images?.[0]} alt="" style={{width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'multiply'}} />
+                  </div>
+                  <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
+                    <div style={{fontWeight: 600, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between'}}>
+                      <span>{item.name}</span>
+                      <button onClick={() => removeItem(item.cartId)} style={{background: 'none', border: 'none', padding: 0, color: 'var(--text-muted)'}}><X size={18}/></button>
+                    </div>
+                    {item.selectedSize && <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px'}}>Размер: {item.selectedSize}</div>}
+                    
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px'}}>
+                      <div style={{fontWeight: 700}}>${Number(item.price).toFixed(2)}</div>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '12px', background: '#f5f5f5', padding: '4px 8px', borderRadius: '100px'}}>
+                        <button onClick={() => updateQty(item.cartId, -1)} style={{background: 'none', border: 'none'}}><Minus size={14}/></button>
+                        <span style={{fontSize: '0.9rem', fontWeight: 600, minWidth: '16px', textAlign: 'center'}}>{item.qty}</span>
+                        <button onClick={() => updateQty(item.cartId, 1)} style={{background: 'none', border: 'none'}}><Plus size={14}/></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '24px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 700, marginBottom: '24px'}}>
+                <span>К оплате:</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              <button className="btn-primary" style={{width: '100%', height: '56px', fontSize: '1.1rem'}} onClick={() => alert('Переход к оплате...')}>
+                Оформить заказ
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -498,7 +594,7 @@ function DetailsView({ product, goBack, favorites, toggleFavorite, addToCart }) 
           <div className="qty-value">{qty < 10 ? `0${qty}` : qty}</div>
           <button className="qty-btn" onClick={() => setQty(qty + 1)}><Plus size={16}/></button>
         </div>
-        <button className="add-to-cart-btn" onClick={() => { addToCart(qty); goBack(); }}>
+        <button className="add-to-cart-btn" onClick={() => { addToCart(product, qty, activeSize); goBack(); }}>
           В корзину
         </button>
       </div>
@@ -917,12 +1013,13 @@ function DressupView({ products, addToCart, showToast }) {
 
   const handleBuyOutfit = () => {
     let count = 0;
-    if (selectedTop) count++;
-    if (selectedBottom) count++;
-    if (selectedShoe) count++;
+    const defaultSize = (p) => p.sizes && p.sizes.length > 0 ? p.sizes[0] : null;
+    
+    if (selectedTop) { addToCart(selectedTop, 1, defaultSize(selectedTop), true); count++; }
+    if (selectedBottom) { addToCart(selectedBottom, 1, defaultSize(selectedBottom), true); count++; }
+    if (selectedShoe) { addToCart(selectedShoe, 1, defaultSize(selectedShoe), true); count++; }
     
     if (count > 0) {
-      addToCart(count);
       showToast(`Весь образ (${count} вещи) добавлен в корзину!`);
     } else {
       showToast('Сначала выберите крутые вещи!');
