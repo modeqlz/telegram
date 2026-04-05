@@ -1096,6 +1096,7 @@ function DressupView({ products, addToCart, showToast }) {
   };
 
   return (
+    <>
     <div className="dressup-view">
       <div className="dressup-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 20px', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Dressup</h2>
@@ -1163,8 +1164,26 @@ function DressupView({ products, addToCart, showToast }) {
           )) : <div className="dressup-empty">Добавьте обувь в админке</div>}
         </div>
       </div>
-
-      {/* Floating Chosen Outfit Preview */}
+      <div style={{ padding: '0 20px 100px', textAlign: 'center' }}>
+        <button 
+          onClick={handleBuyOutfit}
+          style={{
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            padding: '16px 32px',
+            borderRadius: 'var(--radius-full)',
+            width: '100%',
+            fontWeight: 800,
+            fontSize: '1.1rem'
+          }}
+        >
+          Купить весь образ
+        </button>
+      </div>
+    </div>
+      
+      {/* Floating Chosen Outfit Preview - OUTSIDE of transformed container to enable true position: fixed */}
       {(selectedTop || selectedBottom || selectedShoe) && (
         <div style={{
           position: 'fixed',
@@ -1209,25 +1228,7 @@ function DressupView({ products, addToCart, showToast }) {
           ))}
         </div>
       )}
-
-      <div style={{ padding: '0 20px 100px', textAlign: 'center' }}>
-        <button 
-          onClick={handleBuyOutfit}
-          style={{
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            padding: '16px 32px',
-            borderRadius: 'var(--radius-full)',
-            width: '100%',
-            fontWeight: 800,
-            fontSize: '1.1rem'
-          }}
-        >
-          Купить весь образ
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 

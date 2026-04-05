@@ -353,8 +353,8 @@ body {
 .product-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  /* Mix between cover and background to manage white space */
+  object-fit: contain;
+  transform: scale(0.9); /* Zoom out slightly to avoid border clipping */
 }
 
 /* Wrap the details to push price to bottom */
