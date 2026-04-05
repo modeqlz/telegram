@@ -313,21 +313,25 @@ body {
   background-color: var(--primary-light);
 }
 
-.fav-btn-inline svg, .icon-btn svg {
+.fav-btn-inline svg,
+.icon-btn svg {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.fav-btn-inline.active svg, .fav-active-scale svg {
+.fav-btn-inline.active svg,
+.fav-active-scale svg {
   transform: scale(1.15);
 }
 
 .product-img-wrap {
   width: 100%;
-  aspect-ratio: 1; /* Changed to 1:1 square for better image fitting */
+  aspect-ratio: 1;
+  /* Changed to 1:1 square for better image fitting */
   border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: 12px;
-  background-color: var(--bg-main); /* Changed to slightly off-white instead of dark gray */
+  background-color: var(--bg-main);
+  /* Changed to slightly off-white instead of dark gray */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -336,7 +340,8 @@ body {
 .product-img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Mix between cover and background to manage white space */
+  object-fit: cover;
+  /* Mix between cover and background to manage white space */
 }
 
 /* Wrap the details to push price to bottom */
@@ -366,7 +371,8 @@ body {
 .product-price {
   font-size: 1.1rem;
   font-weight: 700;
-  margin-top: auto; /* Pushes the price to the bottom */
+  margin-top: auto;
+  /* Pushes the price to the bottom */
 }
 
 /* Bottom Navigation */
@@ -383,7 +389,7 @@ body {
 }
 
 .nav-inner {
-  background-color: var(--text-main);
+  background-color: #000000;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-full);
   display: flex;
@@ -405,11 +411,12 @@ body {
   color: #888888;
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  /* Smooth, relaxed ease without any bounce or sharp starts */
+  transition: all 0.5s ease-in-out;
 }
 
 .nav-item svg {
-  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.5s ease-in-out;
 }
 
 .nav-item.active {
@@ -430,13 +437,79 @@ body {
   white-space: nowrap;
   overflow: hidden;
   margin-left: 0;
-  transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: all 0.5s ease-in-out;
 }
 
 .nav-item.active span {
   max-width: 100px;
   opacity: 1;
   margin-left: 8px;
+}
+
+/* --- App Level Animations & UX Elements --- */
+
+.page-transition {
+  animation: fadeSlideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(25, 25, 25, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.85rem;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: toastPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toastFadeOut 0.4s ease 2.6s forwards;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  /* Prevent blocking clicks */
+}
+
+@keyframes toastPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.9);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes toastFadeOut {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.9);
+  }
 }
 
 /* --- Product Details Page --- */
@@ -612,7 +685,7 @@ body {
   display: flex;
   gap: 16px;
   align-items: center;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
   z-index: 100;
 }
 
@@ -694,7 +767,9 @@ body {
   color: var(--text-main);
 }
 
-.form-input, .form-textarea, .form-select {
+.form-input,
+.form-textarea,
+.form-select {
   width: 100%;
   padding: 12px 16px;
   border-radius: var(--radius-sm);
@@ -706,7 +781,9 @@ body {
   transition: border-color 0.2s;
 }
 
-.form-input:focus, .form-textarea:focus, .form-select:focus {
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
   border-color: var(--primary);
   background: var(--card-bg);
 }
@@ -787,7 +864,10 @@ body {
 
 .upload-input-file {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
   cursor: pointer;
 }
@@ -840,7 +920,7 @@ body {
   gap: 12px;
 }
 
-.row-group > .form-group {
+.row-group>.form-group {
   flex: 1;
 }
 
@@ -850,6 +930,7 @@ body {
   align-items: center;
   gap: 12px;
 }
+
 .color-picker-input {
   width: 50px;
   height: 50px;
@@ -859,9 +940,11 @@ body {
   cursor: pointer;
   background: transparent;
 }
+
 .color-picker-input::-webkit-color-swatch-wrapper {
   padding: 0;
 }
+
 .color-picker-input::-webkit-color-swatch {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -908,7 +991,7 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .remove-color-btn {
@@ -944,6 +1027,108 @@ body {
   border-radius: var(--radius-sm);
   object-fit: cover;
   background: #f0f0f0;
+  background: #f0f0f0;
+}
+
+/* --- Dressup (Outfit Builder) View --- */
+.dressup-view {
+  padding-top: 20px;
+  padding-bottom: 120px;
+  background-color: #ffffff; /* Pure white masks JPEG backgrounds significantly better */
+}
+
+.dressup-row-wrap {
+  margin-bottom: 20px;
+}
+
+.dressup-row-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.dressup-row-header .subtitle {
+  display: block;
+  font-weight: 500;
+  color: #999;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.dressup-row-header .title {
+  display: block;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #000;
+  letter-spacing: -0.02em;
+}
+
+.dressup-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* 50% - half of item width (140/2=70px). This centers the first/last items! */
+  padding: 20px calc(50% - 70px);
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.dressup-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.dressup-scroll {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.dressup-item {
+  min-width: 140px;
+  max-width: 140px;
+  height: 160px;
+  border-radius: var(--radius-lg);
+  background-color: transparent;
+  scroll-snap-align: center;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dressup-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: all 0.3s ease;
+  /* Brutal contrast push to blow out light gray studio backgrounds into pure white, avoiding square bounding boxes */
+  filter: contrast(1.15) brightness(1.08); 
+  mix-blend-mode: darken; /* Darken perfectly removes white/gray backgrounds on a white container */
+}
+
+.dressup-item.selected img {
+  /* Subtle indicator, no intense scaling to avoid zoom-pop feeling */
+  filter: contrast(1.2) brightness(1.1) drop-shadow(0 12px 24px rgba(0,0,0,0.1));
+  transform: translateY(-4px); 
+}
+
+.dressup-check {
+  display: none;
+}
+
+.dressup-empty {
+  min-width: 100%;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 40px 0;
 }
 
 .ad-item-info {

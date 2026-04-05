@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Menu, Bell, Search, SlidersHorizontal, ArrowLeft, Heart, 
   Home, Tag, ShoppingBag, User, Plus, Minus, X, UploadCloud,
-  Edit2, Trash2, Volume2, VolumeX
+  Edit2, Trash2, Volume2, VolumeX, Layers
 } from 'lucide-react';
 
 const CATEGORIES = ["Худи", "Куртки", "Джинсы", "Футболки", "Обувь"];
@@ -62,6 +62,15 @@ function App() {
   const [activeCategory, setActiveCategory] = useState("Худи");
   const [activeNav, setActiveNav] = useState("home");
   const [favorites, setFavorites] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message) => {
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(50); // Light haptic feedback
+    }
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const toggleFavorite = (e, id) => {
     e.stopPropagation();
@@ -69,6 +78,7 @@ function App() {
       setFavorites(favorites.filter(fId => fId !== id));
     } else {
       setFavorites([...favorites, id]);
+      showToast('Добавлено в избранное');
     }
   };
 
@@ -86,8 +96,9 @@ function App() {
   const addProduct = (newProduct) => {
     try {
       setProducts([{ ...newProduct, id: Date.now() }, ...products]);
+      showToast('Товар добавлен');
     } catch(e) {
-      alert("Не удалось добавить. Возможно фотография слишком большая!");
+      showToast('Не удалось добавить. Слишком большое фото');
     }
   };
 
@@ -98,6 +109,7 @@ function App() {
   const deleteProduct = (id) => {
     if (window.confirm("Удалить это объявление?")) {
       setProducts(products.filter(p => p.id !== id));
+      showToast('Удалено');
     }
   };
 
@@ -107,6 +119,8 @@ function App() {
       setView('admin');
     } else if (navItem === 'tags') {
       setView('favorites');
+    } else if (navItem === 'dressup') {
+      setView('dressup');
     } else {
       setView('home');
     }
@@ -114,57 +128,69 @@ function App() {
 
   const addToCart = (qty) => {
     setCartCount(cartCount + qty);
-    alert(`Добавлено в корзину: ${qty} шт.`);
+    showToast(`В корзину добавлено ${qty} шт.`);
   };
 
   return (
     <div className="app-container">
-      {view === 'admin' ? (
-        <AdminView 
-          products={products}
-          addProduct={addProduct} 
-          updateProduct={updateProduct}
-          deleteProduct={deleteProduct}
-          goBack={goBack} 
-          banner={banner}
-          setBanner={setBanner}
-        />
-      ) : view === 'details' ? (
-        <DetailsView 
-          product={selectedProduct} 
-          goBack={goBack} 
-          favorites={favorites}
-          toggleFavorite={toggleFavorite}
-          activeNav={activeNav}
-          handleNavClick={handleNavClick}
-          addToCart={addToCart}
-          cartCount={cartCount}
-        />
-      ) : view === 'favorites' ? (
-        <FavoritesView 
-          products={products.filter(p => favorites.includes(p.id))}
-          openDetails={openDetails} 
-          favorites={favorites}
-          toggleFavorite={toggleFavorite}
-          activeNav={activeNav}
-          handleNavClick={handleNavClick}
-          cartCount={cartCount}
-        />
-      ) : (
-        <HomeView 
-          products={products}
-          openDetails={openDetails} 
-          activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
-          favorites={favorites}
-          toggleFavorite={toggleFavorite}
-          activeNav={activeNav}
-          handleNavClick={handleNavClick}
-          banner={banner}
-          cartCount={cartCount}
-        />
+      {toast && (
+        <div className="toast-notification">
+          {toast}
+        </div>
       )}
-      
+      <div key={view + (selectedProduct ? selectedProduct.id : '')} className="page-transition">
+        {view === 'admin' ? (
+          <AdminView 
+            products={products}
+            addProduct={addProduct} 
+            updateProduct={updateProduct}
+            deleteProduct={deleteProduct}
+            goBack={goBack} 
+            banner={banner}
+            setBanner={setBanner}
+          />
+        ) : view === 'details' ? (
+          <DetailsView 
+            product={selectedProduct} 
+            goBack={goBack} 
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+            activeNav={activeNav}
+            handleNavClick={handleNavClick}
+            addToCart={addToCart}
+            cartCount={cartCount}
+          />
+        ) : view === 'favorites' ? (
+          <FavoritesView 
+            products={products.filter(p => favorites.includes(p.id))}
+            openDetails={openDetails} 
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+            activeNav={activeNav}
+            handleNavClick={handleNavClick}
+            cartCount={cartCount}
+          />
+        ) : view === 'dressup' ? (
+          <DressupView
+            products={products}
+            addToCart={addToCart}
+            showToast={showToast}
+          />
+        ) : (
+          <HomeView 
+            products={products}
+            openDetails={openDetails} 
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+            activeNav={activeNav}
+            handleNavClick={handleNavClick}
+            banner={banner}
+            cartCount={cartCount}
+          />
+        )}
+      </div>
       {view !== 'details' && (
         <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount}/>
       )}
@@ -198,7 +224,7 @@ function FavoritesView({ products, openDetails, favorites, toggleFavorite, activ
                 )}
               </div>
               <div className="product-details">
-                <div className="product-brand">{product.brand || "RedWear"}</div>
+                <div className="product-brand">{product.brand || "DVK Shop"}</div>
                 <div className="product-name">{product.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <div className="product-price" style={{marginTop: 0}}>${Number(product.price).toFixed(2)}</div>
@@ -231,10 +257,10 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
 
   return (
     <>
-      <header className="header">
-        <button className="icon-btn"><Menu size={20} /></button>
-        <div className="app-logo">RedWear</div>
-        <button className="icon-btn"><Bell size={20} /></button>
+      <header className="header" style={{ justifyContent: 'center', paddingBottom: '10px' }}>
+        <div className="app-logo" style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+          DVK Shop
+        </div>
       </header>
 
       <div className="search-section">
@@ -349,7 +375,7 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
                 )}
               </div>
               <div className="product-details">
-                <div className="product-brand">{product.brand || "RedWear"}</div>
+                <div className="product-brand">{product.brand || "DVK Shop"}</div>
                 <div className="product-name">{product.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <div className="product-price" style={{marginTop: 0}}>${Number(product.price).toFixed(2)}</div>
@@ -412,7 +438,7 @@ function DetailsView({ product, goBack, favorites, toggleFavorite, addToCart }) 
       </div>
 
       <div className="info-section">
-        <div className="details-brand">{product.brand || "RedWear"}</div>
+        <div className="details-brand">{product.brand || "DVK Shop"}</div>
         <h1 className="details-name">{product.name}</h1>
         <div className="details-price">${Number(product.price).toFixed(2)}</div>
 
@@ -536,7 +562,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
     }
 
     const payload = {
-      brand: "RedWear",
+      brand: "DVK Shop",
       name,
       price: parseFloat(price),
       description,
@@ -775,13 +801,17 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
           <Heart size={20} />
           <span>Избранное</span>
         </div>
+        <div className={`nav-item ${activeNav === 'dressup' ? 'active' : ''}`} onClick={() => handleNavClick('dressup')}>
+          <Layers size={20} />
+          <span>Луки</span>
+        </div>
         <div className={`nav-item ${activeNav === 'cart' ? 'active' : ''}`} onClick={() => handleNavClick('cart')} style={{position: 'relative'}}>
           <ShoppingBag size={20} />
           <span>Корзина</span>
           {cartCount > 0 && !activeNav.includes('cart') && (
             <div style={{
               position: 'absolute', top: '10px', right: '10px', 
-              background: 'var(--primary)', color: 'white', 
+              background: 'var(--text-main)', color: 'white', 
               borderRadius: '50%', width: '16px', height: '16px', 
               display: 'flex', justifyContent: 'center', alignItems: 'center', 
               fontSize: '0.65rem', fontWeight: 700
@@ -794,6 +824,136 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
           <User size={20} />
           <span>Профиль</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DressupView({ products, addToCart, showToast }) {
+  const tops = products.filter(p => ["Худи", "Куртки", "Футболки"].includes(p.category));
+  const bottoms = products.filter(p => ["Джинсы", "Брюки"].includes(p.category));
+  const shoes = products.filter(p => ["Обувь"].includes(p.category));
+
+  const [selectedTop, setSelectedTop] = useState(tops[0] || null);
+  const [selectedBottom, setSelectedBottom] = useState(bottoms[0] || null);
+  const [selectedShoe, setSelectedShoe] = useState(shoes[0] || null);
+
+  const performSmoothScroll = (container, targetLeft, duration = 350) => {
+    const startLeft = container.scrollLeft;
+    const distance = targetLeft - startLeft;
+    let startTime = null;
+    
+    const animation = (currentTime) => {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+      const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+      container.scrollLeft = startLeft + distance * ease;
+      if (timeElapsed < duration) {
+        requestAnimationFrame(animation);
+      }
+    };
+    requestAnimationFrame(animation);
+  };
+
+  const handleSelect = (e, item, setter) => {
+    setter(item);
+    const element = e.currentTarget;
+    const container = element.parentElement;
+    const targetScroll = element.offsetLeft - (container.offsetWidth / 2) + (element.offsetWidth / 2);
+    performSmoothScroll(container, targetScroll);
+  };
+
+  const handleBuyOutfit = () => {
+    let count = 0;
+    if (selectedTop) count++;
+    if (selectedBottom) count++;
+    if (selectedShoe) count++;
+    
+    if (count > 0) {
+      addToCart(count);
+      showToast(`Весь образ (${count} вещи) добавлен в корзину!`);
+    } else {
+      showToast('Сначала выберите крутые вещи!');
+    }
+  };
+
+  return (
+    <div className="dressup-view">
+      <div className="dressup-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 20px', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Dressup</h2>
+      </div>
+
+      <div className="dressup-row-wrap">
+        <div className="dressup-row-header">
+          <span className="subtitle">ВЕРХ</span>
+          <h3 className="title">Футболки / Худи</h3>
+        </div>
+        <div className="dressup-scroll">
+          {tops.length > 0 ? tops.map(p => (
+            <div 
+              key={p.id} 
+              className={`dressup-item ${selectedTop?.id === p.id ? 'selected' : ''}`}
+              onClick={(e) => handleSelect(e, p, setSelectedTop)}
+            >
+              <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
+            </div>
+          )) : <div className="dressup-empty">Добавьте верх в админке</div>}
+        </div>
+      </div>
+
+      <div className="dressup-row-wrap">
+        <div className="dressup-row-header">
+          <span className="subtitle">НИЗ</span>
+          <h3 className="title">Джинсы / Брюки</h3>
+        </div>
+        <div className="dressup-scroll">
+          {bottoms.length > 0 ? bottoms.map(p => (
+            <div 
+              key={p.id} 
+              className={`dressup-item ${selectedBottom?.id === p.id ? 'selected' : ''}`}
+              onClick={(e) => handleSelect(e, p, setSelectedBottom)}
+            >
+              <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
+            </div>
+          )) : <div className="dressup-empty">Добавьте низ в админке</div>}
+        </div>
+      </div>
+
+      <div className="dressup-row-wrap">
+        <div className="dressup-row-header">
+          <span className="subtitle">ОБУВЬ</span>
+          <h3 className="title">Кроссовки</h3>
+        </div>
+        <div className="dressup-scroll">
+          {shoes.length > 0 ? shoes.map(p => (
+            <div 
+              key={p.id} 
+              className={`dressup-item ${selectedShoe?.id === p.id ? 'selected' : ''}`}
+              onClick={(e) => handleSelect(e, p, setSelectedShoe)}
+            >
+              <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
+            </div>
+          )) : <div className="dressup-empty">Добавьте обувь в админке</div>}
+        </div>
+      </div>
+
+      <div style={{ padding: '30px 20px', textAlign: 'center' }}>
+        <button 
+          onClick={handleBuyOutfit}
+          style={{
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            padding: '16px 32px',
+            borderRadius: 'var(--radius-full)',
+            width: '100%',
+            fontWeight: 800,
+            fontSize: '1.1rem'
+          }}
+        >
+          Купить весь образ
+        </button>
       </div>
     </div>
   );
