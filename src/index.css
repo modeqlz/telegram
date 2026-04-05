@@ -25,6 +25,11 @@
   box-sizing: border-box;
 }
 
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: 16px; /* CRITICAL: Prevents iOS from aggressively zooming in upon focus */
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-main);
