@@ -234,7 +234,7 @@ function App() {
           />
         )}
       </div>
-      {view !== 'details' && view !== 'admin' && view !== 'cart' && (
+      {view !== 'details' && view !== 'admin' && (
         <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount}/>
       )}
     </div>
@@ -1035,14 +1035,14 @@ function DressupView({ products, addToCart, showToast }) {
   };
 
   const handleSelect = (e, item, setter) => {
-    setter(item);
+    // We let the natural onScroll pick up the selection to avoid race conditions.
     const element = e.currentTarget;
     const container = element.parentElement;
-    const targetScroll = element.offsetLeft - (container.offsetWidth / 2) + (element.offsetWidth / 2);
+    const scrollLeft = element.offsetLeft - container.offsetLeft - (container.clientWidth / 2) + (element.clientWidth / 2);
     
-    // Hardware accelerated native smooth scroll, eliminates JS loop conflicts with scroll-snap
+    // Hardware accelerated native smooth scroll
     container.scrollTo({
-      left: targetScroll,
+      left: scrollLeft,
       behavior: 'smooth'
     });
   };

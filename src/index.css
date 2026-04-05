@@ -39,7 +39,6 @@ body {
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: none; /* Prevent iOS bounce/pull-to-refresh entirely */
   -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight */
   user-select: none; /* Prevent accidental text selection while swiping */
 }
@@ -117,10 +116,13 @@ body {
   border: 1px solid var(--border);
   padding: 0 16px 0 44px;
   font-family: var(--font-main);
-  font-size: 0.95rem;
+  font-size: 16px !important;
   background-color: var(--card-bg);
   outline: none;
   transition: border-color 0.2s;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  caret-color: #B30000 !important;
 }
 
 .search-input:focus {
@@ -1089,7 +1091,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   padding: 20px calc(50% - 70px);
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* Native momentum scrolling on iOS */
-  touch-action: pan-x; /* Explicitly tell browser we only want horizontal panning here to prevent vertical scroll jitter on mobile */
+  touch-action: pan-x pan-y; /* Let browser handle vertical and horizontal swipe natively */
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
