@@ -31,6 +31,9 @@ body {
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none; /* Prevent iOS bounce/pull-to-refresh entirely */
+  -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight */
+  user-select: none; /* Prevent accidental text selection while swiping */
 }
 
 /* Mobile App Wrapper */
@@ -1072,6 +1075,8 @@ body {
   /* 50% - half of item width (140/2=70px). This centers the first/last items! */
   padding: 20px calc(50% - 70px);
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Native momentum scrolling on iOS */
+  touch-action: pan-x; /* Explicitly tell browser we only want horizontal panning here to prevent vertical scroll jitter on mobile */
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

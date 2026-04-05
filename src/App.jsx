@@ -838,6 +838,30 @@ function DressupView({ products, addToCart, showToast }) {
   const [selectedBottom, setSelectedBottom] = useState(bottoms[0] || null);
   const [selectedShoe, setSelectedShoe] = useState(shoes[0] || null);
 
+  const handleScroll = (e, items, setter, currentSelected) => {
+    const container = e.target;
+    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+    
+    let closestItem = null;
+    let minDistance = Infinity;
+
+    Array.from(container.children).forEach((child, index) => {
+      // Each dressup-item
+      if (!items[index]) return;
+      const childCenter = child.offsetLeft + (child.offsetWidth / 2);
+      const distance = Math.abs(containerCenter - childCenter);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestItem = items[index];
+      }
+    });
+
+    if (closestItem && (!currentSelected || closestItem.id !== currentSelected.id)) {
+      setter(closestItem);
+    }
+  };
+
   const handleSelect = (e, item, setter) => {
     setter(item);
     const element = e.currentTarget;
@@ -876,7 +900,10 @@ function DressupView({ products, addToCart, showToast }) {
           <span className="subtitle">ВЕРХ</span>
           <h3 className="title">Футболки / Худи</h3>
         </div>
-        <div className="dressup-scroll">
+        <div 
+          className="dressup-scroll" 
+          onScroll={(e) => handleScroll(e, tops, setSelectedTop, selectedTop)}
+        >
           {tops.length > 0 ? tops.map(p => (
             <div 
               key={p.id} 
@@ -894,7 +921,10 @@ function DressupView({ products, addToCart, showToast }) {
           <span className="subtitle">НИЗ</span>
           <h3 className="title">Джинсы / Брюки</h3>
         </div>
-        <div className="dressup-scroll">
+        <div 
+          className="dressup-scroll"
+          onScroll={(e) => handleScroll(e, bottoms, setSelectedBottom, selectedBottom)}
+        >
           {bottoms.length > 0 ? bottoms.map(p => (
             <div 
               key={p.id} 
@@ -912,7 +942,10 @@ function DressupView({ products, addToCart, showToast }) {
           <span className="subtitle">ОБУВЬ</span>
           <h3 className="title">Кроссовки</h3>
         </div>
-        <div className="dressup-scroll">
+        <div 
+          className="dressup-scroll"
+          onScroll={(e) => handleScroll(e, shoes, setSelectedShoe, selectedShoe)}
+        >
           {shoes.length > 0 ? shoes.map(p => (
             <div 
               key={p.id} 
