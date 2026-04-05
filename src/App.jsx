@@ -12,6 +12,12 @@ function App() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
+    // If running in Telegram Web App, force expand to fix viewport bug where 100vh gets truncated
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.expand();
+      window.Telegram.WebApp.ready();
+    }
+
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from('products')

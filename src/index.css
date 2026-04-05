@@ -274,7 +274,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  padding: 0 20px 100px;
+  padding: 0 20px 200px; /* Safe padding for Telegram Web App bottom constraints */
 }
 
 .empty-state {
@@ -396,7 +396,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 
 .bottom-nav {
   position: fixed;
-  bottom: 32px;
+  bottom: calc(32px + env(safe-area-inset-bottom, 24px));
   left: 50%;
   transform: translateX(-50%);
   width: max-content;
@@ -534,7 +534,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 .details-page {
   background-color: var(--card-bg);
   min-height: 100vh;
-  padding-bottom: 100px;
+  padding-bottom: 200px; /* Increased to fix Telegram Web App viewport cutoff */
 }
 
 .gallery-section {
@@ -693,7 +693,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 /* Bottom Action Bar */
 .bottom-action-bar {
   position: fixed;
-  bottom: 0;
+  bottom: calc(0px + env(safe-area-inset-bottom, 16px));
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
