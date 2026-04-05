@@ -539,7 +539,9 @@ function DetailsView({ product, goBack, favorites, toggleFavorite, addToCart }) 
 
   if (!product) return null;
   const isFav = favorites.includes(product.id);
-  const images = product.images || [];
+  const allImages = product.images || [];
+  // Exclude the first image from the gallery (it acts strictly as the catalog preview)
+  const images = allImages.length > 1 ? allImages.slice(1) : allImages;
 
   return (
     <div className="details-page">
@@ -858,11 +860,36 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
           {images.length > 0 && (
             <div className="image-preview-grid">
               {images.map((imgSrc, idx) => (
-                <div className="preview-item" key={idx}>
-                  <img src={imgSrc} alt={`upload-${idx}`} />
-                  <button type="button" className="remove-btn-absolute" onClick={() => removeImage(idx)}>
+                <div className="preview-item" key={idx} style={{ position: 'relative', border: idx === 0 ? '2px solid var(--primary)' : '1px solid var(--border)', padding: idx === 0 ? '2px' : '0' }}>
+                  <img src={imgSrc} alt={`upload-${idx}`} style={{ borderRadius: '4px' }} />
+                  {idx === 0 && (
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', padding: '2px 0', textAlign: 'center', fontWeight: 'bold' }}>
+                      ПРЕВЬЮ
+                    </div>
+                  )}
+                  <button type="button" className="remove-btn-absolute" onClick={() => removeImage(idx)} style={{ zIndex: 10 }}>
                     <X size={14} />
                   </button>
+                  {idx > 0 && (
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setImages(prev => {
+                          const newArr = [...prev];
+                          const selected = newArr.splice(idx, 1)[0];
+                          newArr.unshift(selected);
+                          return newArr;
+                        });
+                      }}
+                      style={{
+                        position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', 
+                        color: 'white', border: '1px solid rgba(255,255,255,0.5)', borderRadius: '4px', 
+                        fontSize: '0.65rem', padding: '4px 6px', cursor: 'pointer', zIndex: 5
+                      }}
+                    >
+                      Сделать превью
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
