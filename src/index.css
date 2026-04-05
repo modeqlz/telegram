@@ -384,6 +384,11 @@ body {
 }
 
 /* Bottom Navigation */
+/* Automatically hide bottom nav on mobile if any input is aggressively focused */
+body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
+  display: none !important;
+}
+
 .bottom-nav {
   position: fixed;
   bottom: 32px;

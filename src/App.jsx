@@ -214,7 +214,7 @@ function App() {
           />
         )}
       </div>
-      {view !== 'details' && (
+      {view !== 'details' && view !== 'admin' && (
         <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount}/>
       )}
     </div>
