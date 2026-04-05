@@ -4,21 +4,28 @@ import {
   Home, Tag, ShoppingBag, User, Plus, Minus, X, UploadCloud,
   Edit2, Trash2, Volume2, VolumeX, Layers
 } from 'lucide-react';
+import { supabase } from './supabaseClient';
 
 const CATEGORIES = ["Худи", "Куртки", "Джинсы", "Футболки", "Обувь"];
 
 function App() {
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('redwear_products');
-      if (saved) {
-        return JSON.parse(saved);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching products:", error);
+      } else {
+        setProducts(data || []);
       }
-    } catch (e) {
-      return [];
-    }
-    return [];
-  });
+    };
+    fetchProducts();
+  }, []);
 
   const [banner, setBanner] = useState(() => {
     try {
@@ -33,15 +40,6 @@ function App() {
   const [cartCount, setCartCount] = useState(() => {
     return parseInt(localStorage.getItem('redwear_cart') || "0");
   });
-
-  // Safe save to LocalStorage (prevents large videos from crashing the browser's 5MB limit)
-  useEffect(() => {
-    try {
-      localStorage.setItem('redwear_products', JSON.stringify(products));
-    } catch (e) {
-      console.warn("Storage Quota Exceeded for Products");
-    }
-  }, [products]);
 
   useEffect(() => {
     try {
@@ -93,23 +91,48 @@ function App() {
     setActiveNav('home');
   };
 
-  const addProduct = (newProduct) => {
-    try {
-      setProducts([{ ...newProduct, id: Date.now() }, ...products]);
-      showToast('Товар добавлен');
-    } catch(e) {
-      showToast('Не удалось добавить. Слишком большое фото');
+  const addProduct = async (newProduct) => {
+    const { data, error } = await supabase
+      .from('products')
+      .insert([newProduct])
+      .select();
+
+    if (error) {
+      showToast('Ошибка при добавлении в БД: ' + error.message);
+    } else if (data && data.length > 0) {
+      setProducts([data[0], ...products]);
+      showToast('Товар успешно добавлен!');
     }
   };
 
-  const updateProduct = (updatedProduct) => {
-    setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  const updateProduct = async (updatedProduct) => {
+    const { data, error } = await supabase
+      .from('products')
+      .update(updatedProduct)
+      .eq('id', updatedProduct.id)
+      .select();
+
+    if (error) {
+      showToast('Ошибка при обновлении: ' + error.message);
+    } else if (data && data.length > 0) {
+      setProducts(products.map(p => p.id === updatedProduct.id ? data[0] : p));
+      showToast('Изменения сохранены!');
+    }
   };
 
-  const deleteProduct = (id) => {
-    if (window.confirm("Удалить это объявление?")) {
-      setProducts(products.filter(p => p.id !== id));
-      showToast('Удалено');
+  const deleteProduct = async (id) => {
+    if (window.confirm("Удалить это объявление навсегда?")) {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        showToast('Ошибка при удалении: ' + error.message);
+      } else {
+        setProducts(products.filter(p => p.id !== id));
+        showToast('Удалено успешно');
+      }
     }
   };
 
@@ -512,18 +535,37 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
-      // Products continue to use Base64 since images are small
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result]);
-      };
+    
+    for (const file of files) {
       if (file) {
-        reader.readAsDataURL(file);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+        
+        try {
+          // Upload to Supabase Storage
+          const { error } = await supabase.storage
+            .from('product-images')
+            .upload(fileName, file);
+            
+          if (error) {
+            console.error("Upload error:", error);
+            alert("Ошибка загрузки. Проверьте права доступа в Supabase RLS.");
+            continue;
+          }
+
+          // Get public URL
+          const { data } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(fileName);
+            
+          setImages(prev => [...prev, data.publicUrl]);
+        } catch (err) {
+          console.error(err);
+        }
       }
-    });
+    }
   };
 
   const removeImage = (indexToRemove) => {
@@ -573,10 +615,8 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
 
     if (editingId) {
       updateProduct({ ...payload, id: editingId });
-      alert("Изменения сохранены!");
     } else {
       addProduct(payload);
-      alert("Товар успешно опубликован!");
     }
     cancelEdit();
     setAdminTab('list');
