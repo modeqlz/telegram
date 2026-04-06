@@ -1035,40 +1035,98 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
   );
 }
 
+function FlyingItem({ item, onComplete }) {
+  const [style, setStyle] = useState({
+    transform: 'translate(0, 0) scale(1) rotate(0deg)',
+    opacity: 1
+  });
+
+  useEffect(() => {
+    // Precise center-to-center geometry calculation for flying objects.
+    const pillBottomOffset = 100 + 24; // approx bottom offset
+    const pillCenterY = window.innerHeight - pillBottomOffset - 32; // 32 is half the pill height
+    const targetLeft = (window.innerWidth / 2) - Math.min(240, window.innerWidth / 2) + 20;
+    
+    // Calculate the dynamic slot X using the slotIndex (42px distance between overlapping circle centers)
+    const pillCenterX = targetLeft + 40 + (item.slotIndex * 42); 
+    
+    const imgCenterX = item.startX + (item.width / 2);
+    const imgCenterY = item.startY + (item.height / 2);
+    
+    const destX = pillCenterX - imgCenterX;
+    const destY = pillCenterY - imgCenterY;
+    
+    // Explicit timeout to ensure browser paints start before transitioning
+    const startTimer = setTimeout(() => {
+      setStyle({
+        transform: `translate(${destX}px, ${destY}px) scale(0.15) rotate(${item.rot}deg)`,
+        opacity: 1
+      });
+    }, 50);
+
+    // Exact synchronization with CSS transition duration (450ms)
+    const timer = setTimeout(() => onComplete(item.id), 500);
+    return () => {
+      clearTimeout(startTimer);
+      clearTimeout(timer);
+    };
+  }, [item, onComplete]);
+
+  return (
+    <img 
+      src={item.img} 
+      style={{
+        position: 'fixed',
+        top: item.startY,
+        left: item.startX,
+        width: item.width,
+        height: item.height,
+        objectFit: 'contain',
+        zIndex: 150, // Flies under the Pill (zIndex 200)
+        pointerEvents: 'none',
+        transition: 'all 0.45s ease-in',
+        ...style
+      }}
+      alt=""
+    />
+  );
+}
+
 function DressupView({ products, addToCart, showToast }) {
   const tops = products.filter(p => ["Худи", "Куртки", "Футболки"].includes(p.category));
   const bottoms = products.filter(p => ["Джинсы", "Брюки"].includes(p.category));
   const shoes = products.filter(p => ["Обувь"].includes(p.category));
 
-  const [selectedTop, setSelectedTop] = useState(tops[0] || null);
-  const [selectedBottom, setSelectedBottom] = useState(bottoms[0] || null);
-  const [selectedShoe, setSelectedShoe] = useState(shoes[0] || null);
+  const [selectedTop, setSelectedTop] = useState(null);
+  const [selectedBottom, setSelectedBottom] = useState(null);
+  const [selectedShoe, setSelectedShoe] = useState(null);
+  const [flyingItems, setFlyingItems] = useState([]);
+  const [previewProduct, setPreviewProduct] = useState(null);
+  const [descExpanded, setDescExpanded] = useState(false);
 
-  const handleScroll = (e, items, setter, currentSelected) => {
-    const container = e.target;
-    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
-    
-    let closestItem = null;
-    let minDistance = Infinity;
-
-    Array.from(container.children).forEach((child, index) => {
-      // Each dressup-item
-      if (!items[index]) return;
-      const childCenter = child.offsetLeft + (child.offsetWidth / 2);
-      const distance = Math.abs(containerCenter - childCenter);
+  const handleSelect = (e, item, setter, slotIndex) => {
+    // Generate flying animation
+    const imgEl = e.currentTarget.querySelector('img');
+    if (imgEl) {
+      const rect = imgEl.getBoundingClientRect();
+      const hash = String(item.id).split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+      const rot = (Math.abs(hash) % 24) - 12; // -12 to +12 degrees
       
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestItem = items[index];
-      }
-    });
-
-    if (closestItem && (!currentSelected || closestItem.id !== currentSelected.id)) {
-      setter(closestItem);
+      setFlyingItems(prev => [...prev, {
+        id: Date.now() + Math.random(),
+        rot,
+        img: item.images && item.images.length > 0 ? item.images[0] : item.image,
+        startX: rect.left,
+        startY: rect.top,
+        width: rect.width,
+        height: rect.height,
+        slotIndex,
+        executeSetter: () => setter(item)
+      }]);
+    } else {
+      setter(item); // Fallback if no image found
     }
-  };
-
-  const handleSelect = (e, item, setter) => {
+    
     // We let the natural onScroll pick up the selection to avoid race conditions.
     const element = e.currentTarget;
     const container = element.parentElement;
@@ -1109,14 +1167,13 @@ function DressupView({ products, addToCart, showToast }) {
           <h3 className="title">Футболки / Худи</h3>
         </div>
         <div 
-          className="dressup-scroll" 
-          onScroll={(e) => handleScroll(e, tops, setSelectedTop, selectedTop)}
+          className="dressup-scroll"
         >
           {tops.length > 0 ? tops.map(p => (
             <div 
               key={p.id} 
               className={`dressup-item ${selectedTop?.id === p.id ? 'selected' : ''}`}
-              onClick={(e) => handleSelect(e, p, setSelectedTop)}
+              onClick={(e) => handleSelect(e, p, setSelectedTop, 0)}
             >
               <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
             </div>
@@ -1131,13 +1188,12 @@ function DressupView({ products, addToCart, showToast }) {
         </div>
         <div 
           className="dressup-scroll"
-          onScroll={(e) => handleScroll(e, bottoms, setSelectedBottom, selectedBottom)}
         >
           {bottoms.length > 0 ? bottoms.map(p => (
             <div 
               key={p.id} 
               className={`dressup-item ${selectedBottom?.id === p.id ? 'selected' : ''}`}
-              onClick={(e) => handleSelect(e, p, setSelectedBottom)}
+              onClick={(e) => handleSelect(e, p, setSelectedBottom, selectedTop ? 1 : 0)}
             >
               <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
             </div>
@@ -1152,47 +1208,108 @@ function DressupView({ products, addToCart, showToast }) {
         </div>
         <div 
           className="dressup-scroll"
-          onScroll={(e) => handleScroll(e, shoes, setSelectedShoe, selectedShoe)}
         >
           {shoes.length > 0 ? shoes.map(p => (
             <div 
               key={p.id} 
               className={`dressup-item ${selectedShoe?.id === p.id ? 'selected' : ''}`}
-              onClick={(e) => handleSelect(e, p, setSelectedShoe)}
+              onClick={(e) => handleSelect(e, p, setSelectedShoe, (selectedTop ? 1 : 0) + (selectedBottom ? 1 : 0))}
             >
               <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
             </div>
           )) : <div className="dressup-empty">Добавьте обувь в админке</div>}
         </div>
       </div>
-      <div style={{ padding: '0 20px 100px', textAlign: 'center' }}>
-        <button 
-          onClick={handleBuyOutfit}
-          style={{
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            padding: '16px 32px',
-            borderRadius: 'var(--radius-full)',
-            width: '100%',
-            fontWeight: 800,
-            fontSize: '1.1rem'
-          }}
-        >
-          Купить весь образ
-        </button>
-      </div>
+      <div style={{ paddingBottom: '120px' }}></div>
     </div>
       
-      {/* Floating Chosen Outfit Preview - OUTSIDE of transformed container to enable true position: fixed */}
+      {/* Product Preview Bottom Sheet */}
+      {previewProduct && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, animation: 'fadeIn 0.3s' }} 
+            onClick={() => setPreviewProduct(null)}
+          />
+          <div 
+            style={{
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              width: 'calc(100% - 40px)', maxWidth: '400px', background: 'white', borderRadius: '24px',
+              padding: '24px', zIndex: 1001,
+              animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', position: 'relative' }}>
+              <button 
+                onClick={() => setPreviewProduct(null)} 
+                style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#f5f5f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
+                <X size={16} strokeWidth={3} color="#666"/>
+              </button>
+              <div 
+               id="preview-modal-img"
+               style={{ width: '100%', height: '220px', flexShrink: 0, borderRadius: '16px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <img src={previewProduct.item.images?.[0] || previewProduct.item.image} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '20px' }} alt="" />
+              </div>
+              <div style={{ width: '100%', textAlign: 'center' }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.2 }}>{previewProduct.item.name}</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{previewProduct.item.price} ₸</p>
+                <div onClick={() => setDescExpanded(!descExpanded)} style={{ cursor: 'pointer', background: '#fafafa', padding: '12px', borderRadius: '12px' }}>
+                  <p style={{ 
+                    margin: 0, fontSize: '0.95rem', color: '#555', textAlign: 'left', lineHeight: 1.4,
+                    display: descExpanded ? 'block' : '-webkit-box', 
+                    WebkitLineClamp: descExpanded ? 'unset' : 3, 
+                    WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                    transition: 'all 0.3s'
+                  }}>
+                    {previewProduct.item.description || 'Идеальное дополнение к вашему образу.'}
+                  </p>
+                  {!descExpanded && <div style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 700, marginTop: '6px', textAlign: 'left' }}>Развернуть</div>}
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const defaultSize = previewProduct.item.sizes && previewProduct.item.sizes.length > 0 ? previewProduct.item.sizes[0] : null;
+                addToCart(previewProduct.item, 1, defaultSize, true);
+                showToast('Добавлено в корзину!');
+                setPreviewProduct(null);
+              }}
+              style={{
+                width: '100%', marginTop: '32px', marginBottom: '8px', padding: '16px', background: 'var(--primary)', color: 'white',
+                border: 'none', borderRadius: 'var(--radius-full)', fontSize: '1.1rem', fontWeight: 800,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}
+            >
+              Добавить в корзину
+            </button>
+          </div>
+        </>
+      )}
+      
+      {/* Flying transition objects */}
+      {flyingItems.map(item => (
+        <FlyingItem 
+          key={item.id} 
+          item={item} 
+          onComplete={(id) => {
+            if (item.executeSetter) item.executeSetter();
+            setFlyingItems(prev => prev.filter(i => i.id !== id));
+          }} 
+        />
+      ))}
+
+      {/* Floating Chosen Outfit Preview */}
       {(selectedTop || selectedBottom || selectedShoe) && (
-        <div style={{
-          position: 'fixed',
-          bottom: 'calc(80px + env(safe-area-inset-bottom, 24px))',
-          left: '20px',
-          background: '#ffffff',
-          borderRadius: '50px',
-          padding: '8px 16px',
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: 'calc(100px + env(safe-area-inset-bottom, 24px))',
+            left: 'calc(50vw - min(240px, 50vw) + 20px)',
+            background: '#ffffff',
+            borderRadius: '50px',
+            padding: '8px 16px',
           display: 'flex',
           alignItems: 'center',
           boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
@@ -1203,15 +1320,26 @@ function DressupView({ products, addToCart, showToast }) {
             { item: selectedTop, setter: setSelectedTop, ml: '0px', z: 3 },
             { item: selectedBottom, setter: setSelectedBottom, ml: '-12px', z: 2 },
             { item: selectedShoe, setter: setSelectedShoe, ml: '-12px', z: 1 }
-          ].map(({ item, setter, ml, z }, i) => item && (
-            <div key={i} style={{ 
+          ].map(({ item, setter, ml, z }, i) => {
+            if (!item) return null;
+            const hash = String(item.id).split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+            const rot = (Math.abs(hash) % 24) - 12;
+            
+            return (
+            <div key={i} 
+              onClick={() => {
+                setPreviewProduct({ item });
+                setDescExpanded(false); // Reset expansion state
+              }}
+              style={{ 
+              cursor: 'pointer',
               position: 'relative', 
               marginLeft: ml,
               zIndex: z,
               transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', background: '#f5f5f5',  boxShadow: '0 2px 8px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(0.8)' }} />
+                <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(0.85) rotate(${rot}deg)` }} />
               </div>
               <button 
                 onClick={() => setter(null)}
@@ -1225,7 +1353,8 @@ function DressupView({ products, addToCart, showToast }) {
                 <X size={10} strokeWidth={3} />
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>
