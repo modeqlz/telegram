@@ -295,7 +295,7 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
                     {item.selectedSize && <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px'}}>Размер: {item.selectedSize}</div>}
                     
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px'}}>
-                      <div style={{fontWeight: 700}}>${Number(item.price).toFixed(2)}</div>
+                      <div style={{fontWeight: 700}}>{Number(item.price)} ₽</div>
                       <div style={{display: 'flex', alignItems: 'center', gap: '12px', background: '#f5f5f5', padding: '4px 8px', borderRadius: '100px'}}>
                         <button onClick={() => updateQty(item.cartId, -1)} style={{background: 'none', border: 'none'}}><Minus size={14}/></button>
                         <span style={{fontSize: '0.9rem', fontWeight: 600, minWidth: '16px', textAlign: 'center'}}>{item.qty}</span>
@@ -310,7 +310,7 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
             <div style={{marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '24px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 700, marginBottom: '24px'}}>
                 <span>К оплате:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{total} ₽</span>
               </div>
               <button className="btn-primary" style={{width: '100%', height: '56px', fontSize: '1.1rem'}} onClick={() => alert('Переход к оплате...')}>
                 Оформить заказ
@@ -352,7 +352,7 @@ function FavoritesView({ products, openDetails, favorites, toggleFavorite, activ
                 <div className="product-brand">{product.brand || "DVK Shop"}</div>
                 <div className="product-name">{product.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                  <div className="product-price" style={{marginTop: 0}}>${Number(product.price).toFixed(2)}</div>
+                  <div className="product-price" style={{marginTop: 0}}>{Number(product.price)} ₽</div>
                   <button 
                     className={`fav-btn-inline ${favorites.includes(product.id) ? 'active' : ''}`}
                     onClick={(e) => toggleFavorite(e, product.id)}
@@ -515,7 +515,7 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
                 <div className="product-brand">{product.brand || "DVK Shop"}</div>
                 <div className="product-name">{product.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                  <div className="product-price" style={{marginTop: 0}}>${Number(product.price).toFixed(2)}</div>
+                  <div className="product-price" style={{marginTop: 0}}>{Number(product.price)} ₽</div>
                   <button 
                     className={`fav-btn-inline ${favorites.includes(product.id) ? 'active' : ''}`}
                     onClick={(e) => toggleFavorite(e, product.id)}
@@ -579,7 +579,7 @@ function DetailsView({ product, goBack, favorites, toggleFavorite, addToCart }) 
       <div className="info-section">
         <div className="details-brand">{product.brand || "DVK Shop"}</div>
         <h1 className="details-name">{product.name}</h1>
-        <div className="details-price">${Number(product.price).toFixed(2)}</div>
+        <div className="details-price">{Number(product.price)} ₽</div>
 
         <div className="options-row">          
           {product.sizes && product.sizes.length > 0 && (
@@ -977,7 +977,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
                <img src={product.images && product.images.length > 0 ? product.images[0] : ""} alt="" className="ad-item-img" />
                <div className="ad-item-info">
                  <div className="ad-item-title">{product.name}</div>
-                 <div className="ad-item-price">${Number(product.price).toFixed(2)}</div>
+                 <div className="ad-item-price">{Number(product.price)} ₽</div>
                </div>
                <div className="ad-item-actions">
                   <button className="action-btn" title="Редактировать" onClick={() => startEdit(product)}>
@@ -1037,7 +1037,7 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
 
 function FlyingItem({ item, onComplete }) {
   const [style, setStyle] = useState({
-    transform: 'translate(0, 0) scale(1) rotate(0deg)',
+    transform: 'translate3d(0, 0, 0) scale(1) rotate(0deg)',
     opacity: 1
   });
 
@@ -1059,7 +1059,7 @@ function FlyingItem({ item, onComplete }) {
     // Explicit timeout to ensure browser paints start before transitioning
     const startTimer = setTimeout(() => {
       setStyle({
-        transform: `translate(${destX}px, ${destY}px) scale(0.15) rotate(${item.rot}deg)`,
+        transform: `translate3d(${destX}px, ${destY}px, 0) scale(0.15) rotate(${item.rot}deg)`,
         opacity: 1
       });
     }, 50);
@@ -1084,7 +1084,8 @@ function FlyingItem({ item, onComplete }) {
         objectFit: 'contain',
         zIndex: 150, // Flies under the Pill (zIndex 200)
         pointerEvents: 'none',
-        transition: 'all 0.45s ease-in',
+        transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)', // Hardware accelerated curve
+        willChange: 'transform',
         ...style
       }}
       alt=""
@@ -1252,7 +1253,7 @@ function DressupView({ products, addToCart, showToast }) {
               </div>
               <div style={{ width: '100%', textAlign: 'center' }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.2 }}>{previewProduct.item.name}</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{previewProduct.item.price} ₸</p>
+                <p style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{Number(previewProduct.item.price)} ₽</p>
                 <div onClick={() => setDescExpanded(!descExpanded)} style={{ cursor: 'pointer', background: '#fafafa', padding: '12px', borderRadius: '12px' }}>
                   <p style={{ 
                     margin: 0, fontSize: '0.95rem', color: '#555', textAlign: 'left', lineHeight: 1.4,
