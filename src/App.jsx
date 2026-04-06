@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu, Bell, Search, SlidersHorizontal, ArrowLeft, Heart, 
   Home, Tag, ShoppingBag, User, Plus, Minus, X, UploadCloud,
-  Edit2, Trash2, Volume2, VolumeX, Layers
+  Edit2, Trash2, Volume2, VolumeX, Layers, Package, Info, ChevronRight, HelpCircle
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
@@ -1071,6 +1071,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
 
 function ProfileView({ tgUser, openAdmin }) {
   const isAdmin = tgUser && ADMIN_IDS.includes(tgUser.id);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   
   return (
     <div className="profile-page page-transition" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
@@ -1082,7 +1083,7 @@ function ProfileView({ tgUser, openAdmin }) {
         {tgUser ? (
           <>
             {tgUser.photo_url ? (
-              <img src={tgUser.photo_url} alt="Profile" style={{width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', marginBottom: '16px', border: '3px solid var(--surface-elevated)'}} />
+              <img src={tgUser.photo_url} alt="Profile" style={{width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', marginBottom: '16px', border: '3px solid var(--surface-elevated)', boxShadow: 'var(--shadow-md)'}} />
             ) : (
               <div style={{width: '90px', height: '90px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', marginBottom: '16px'}}>
                 {tgUser.first_name ? tgUser.first_name[0].toUpperCase() : <User size={40} />}
@@ -1091,29 +1092,62 @@ function ProfileView({ tgUser, openAdmin }) {
             <h2 style={{fontSize: '1.4rem', marginBottom: '4px', textAlign: 'center'}}>{tgUser.first_name} {tgUser.last_name}</h2>
             {tgUser.username && <div style={{color: 'var(--text-muted)', marginBottom: '16px'}}>@{tgUser.username}</div>}
             
-            <div style={{background: 'var(--card-bg)', padding: '16px 20px', borderRadius: 'var(--radius-md)', margin: '20px 0', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 'var(--shadow-sm)'}}>
-              <div>Telegram ID:</div>
-              <div style={{color: 'var(--text-main)', fontSize: '1.1rem', fontWeight: 600, marginTop: '4px', fontFamily: 'monospace'}}>{tgUser.id}</div>
-              {!isAdmin && <div style={{marginTop: '12px', textAlign: 'center', fontSize: '0.8rem', lineHeight: 1.4}}>Скопируйте этот ID и добавьте в `ADMIN_IDS` в коде (App.jsx), чтобы получить доступ к Админке.</div>}
-              {isAdmin && <div style={{marginTop: '8px', color: 'var(--primary)', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Права администратора</div>}
+            {/* Блок заказов */}
+            <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)'}}>
+              <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '1.1rem'}}>
+                  <Package size={20} color="var(--primary)" />
+                  Мои заказы
+                </div>
+                <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>0 активных</div>
+              </div>
+              <div style={{textAlign: 'center', padding: '24px 0', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)'}}>
+                <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>У вас пока нет активных заказов</div>
+              </div>
+            </div>
+
+            {/* Меню информации */}
+            <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '24px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border)'}}>
+              <div 
+                style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)', cursor: 'pointer', background: 'transparent'}}
+                onClick={() => setShowDeliveryModal(true)}
+              >
+                <div style={{display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1rem', fontWeight: 500}}>
+                  <Info size={20} color="var(--text-muted)" />
+                  Условия доставки
+                </div>
+                <ChevronRight size={20} color="var(--text-muted)" />
+              </div>
+              <div 
+                style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer', background: 'transparent'}}
+                onClick={() => {
+                  const url = `https://t.me/DvkShopSupportBot`; // Заглушка
+                  if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.openTelegramLink(url);
+                  } else {
+                    window.open(url, '_blank');
+                  }
+                }}
+              >
+                <div style={{display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1rem', fontWeight: 500}}>
+                  <HelpCircle size={20} color="var(--text-muted)" />
+                  Служба поддержки
+                </div>
+                <ChevronRight size={20} color="var(--text-muted)" />
+              </div>
+            </div>
+
+            {/* Внутренняя инфа (видна только текущему пользователю, если он админ) */}
+            <div style={{width: '100%', maxWidth: '340px', background: 'var(--bg-main)', padding: '12px', borderRadius: 'var(--radius-sm)', marginBottom: '20px', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px dashed var(--border)'}}>
+              <div>Telegram ID: <span style={{color: 'var(--text-main)', fontFamily: 'monospace'}}>{tgUser.id}</span></div>
+              {isAdmin && <div style={{marginTop: '4px', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em'}}>Права администратора активны</div>}
             </div>
 
             {isAdmin && (
-              <button className="btn-primary" style={{marginTop: '20px', width: '100%', maxWidth: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}} onClick={openAdmin}>
-                <Edit2 size={18} /> Админ-панель
+              <button className="btn-primary" style={{marginTop: '0', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}} onClick={openAdmin}>
+                <Edit2 size={18} /> Админ-панель (Добавить товар)
               </button>
             )}
-            
-            <button className="promo-btn" style={{marginTop: '12px', width: '100%', maxWidth: '300px', background: 'var(--surface-elevated)', color: 'var(--text-main)'}} onClick={() => {
-              const url = `https://t.me/DvkShopSupportBot`; // Placeholder
-              if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.openTelegramLink(url);
-              } else {
-                window.open(url, '_blank');
-              }
-            }}>
-              Написать в поддержку
-            </button>
           </>
         ) : (
           <div style={{textAlign: 'center', color: 'var(--text-muted)', marginTop: '40px'}}>
@@ -1122,6 +1156,26 @@ function ProfileView({ tgUser, openAdmin }) {
           </div>
         )}
       </div>
+
+      {/* Модальное окно "Условия доставки" */}
+      {showDeliveryModal && (
+        <div style={{position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(10px)'}}>
+          <div style={{background: 'var(--card-bg)', width: '100%', maxWidth: '360px', borderRadius: 'var(--radius-lg)', padding: '24px', position: 'relative', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)'}}>
+            <button onClick={() => setShowDeliveryModal(false)} style={{position: 'absolute', top: '16px', right: '16px', background: 'var(--surface-elevated)', border: 'none', color: 'var(--text-main)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              <X size={18} />
+            </button>
+            <h3 style={{fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px', color: 'var(--text-main)'}}>Условия доставки</h3>
+            <div style={{fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '12px'}}>
+              <p>📦 <strong>Доставка СДЭК:</strong> Осуществляется по всей России и странам СНГ. Среднее время: 3-5 дней.</p>
+              <p>⚡ <strong>Курьерская доставка:</strong> Доступна в Москве и Санкт-Петербурге на следующий день после заказа.</p>
+              <p>💳 <strong>Оплата:</strong> Производится онлайн или при получении в пункте выдачи (с примеркой).</p>
+            </div>
+            <button className="promo-btn" style={{width: '100%', marginTop: '20px'}} onClick={() => setShowDeliveryModal(false)}>
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
