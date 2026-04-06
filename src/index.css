@@ -417,6 +417,7 @@ video::-webkit-media-controls-start-playback-button {
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -581,6 +582,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   display: flex;
   gap: 16px;
   padding: 0 20px;
+  margin-top: 16px;
   margin-bottom: 24px;
 }
 
@@ -1220,6 +1222,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1256,6 +1259,418 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 
 .action-btn:active {
   transform: scale(0.9);
+}
+
+/* ===== DRESSUP VIEW ===== */
+.dressup-view {
+  padding: 0 0 140px 0;
+  min-height: 100vh;
+}
+
+.dressup-hero {
+  text-align: center;
+  padding: 16px 20px 24px;
+}
+
+.dressup-hero-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 6px;
+  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dressup-hero-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dressup-section {
+  margin-bottom: 28px;
+}
+
+.dressup-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 14px;
+}
+
+.dressup-section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.dressup-section-icon.top { background: rgba(139, 92, 246, 0.15); }
+.dressup-section-icon.bottom { background: rgba(59, 130, 246, 0.15); }
+.dressup-section-icon.shoes { background: rgba(245, 158, 11, 0.15); }
+
+.dressup-section-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dressup-section-label .tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.dressup-section-label .name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.dressup-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px calc(50% - 65px);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dressup-scroll::-webkit-scrollbar { display: none; }
+
+.dressup-item {
+  flex: 0 0 auto;
+  width: 130px;
+  height: 180px;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transform: scale(0.7);
+  opacity: 0.45;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+}
+
+.dressup-item.centered {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.dressup-item:active {
+  filter: brightness(0.8);
+}
+
+.dressup-item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.dressup-empty {
+  flex: 0 0 100%;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 40px 0;
+}
+
+.dressup-row-wrap {
+  margin-bottom: 8px;
+}
+
+.dressup-row-header {
+  text-align: center;
+  padding: 0 20px 10px;
+}
+
+.dressup-row-header .subtitle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.dressup-row-header .title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 4px 0 0;
+  color: var(--text-main);
+}
+
+.dressup-subcats-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.dressup-subcats {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px calc(50% - 45px);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
+}
+
+.dressup-subcats::-webkit-scrollbar { display: none; }
+
+.dressup-subcat {
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  scroll-snap-align: center;
+  opacity: 0.35;
+  flex-shrink: 0;
+  transform: scale(0.85);
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.dressup-subcat.centered {
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1.05rem;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dressup-card {
+  flex: 0 0 140px;
+  scroll-snap-align: center;
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.dressup-card:active {
+  transform: scale(0.96);
+}
+
+.dressup-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 4px 20px rgba(230, 0, 0, 0.15);
+}
+
+.dressup-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  z-index: 2;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dressup-card-img {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-elevated);
+  padding: 12px;
+}
+
+.dressup-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.dressup-card:active .dressup-card-img img {
+  transform: scale(0.92);
+}
+
+.dressup-card-info {
+  padding: 10px 12px 12px;
+}
+
+.dressup-card-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.dressup-card-price {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.dressup-empty-state {
+  flex: 0 0 calc(100% - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px dashed var(--border);
+}
+
+/* Outfit Summary Bar */
+.outfit-summary {
+  position: fixed;
+  bottom: calc(100px + env(safe-area-inset-bottom, 24px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  z-index: 200;
+  animation: slideUpSmooth 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpSmooth {
+  from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.outfit-avatars {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.outfit-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2.5px solid var(--card-bg);
+  background: var(--surface-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.outfit-avatar:not(:first-child) {
+  margin-left: -10px;
+}
+
+.outfit-avatar:active {
+  transform: scale(0.9);
+}
+
+.outfit-avatar img {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+}
+
+.outfit-avatar .remove-x {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 16px;
+  height: 16px;
+  background: var(--surface-elevated);
+  border: 2px solid var(--card-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.outfit-avatar:hover .remove-x,
+.outfit-avatar:active .remove-x {
+  opacity: 1;
+}
+
+.outfit-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.outfit-info .count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.outfit-info .total {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.outfit-buy-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.outfit-buy-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.dressup-divider {
+  height: 1px;
+  margin: 0 20px 28px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
 }
 
 @keyframes slideFadeToast {
