@@ -14,6 +14,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
   const [description, setDescription] = useState('');
   const [sizesRaw, setSizesRaw] = useState('');
   const [images, setImages] = useState([]);
+  const [draggedIdx, setDraggedIdx] = useState(null);
   const [usersList, setUsersList] = useState([]);
   const [clientSearchText, setClientSearchText] = useState('');
 
@@ -478,8 +479,45 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
           {images.length > 0 && (
             <div className="image-preview-grid">
               {images.map((imgSrc, idx) => (
-                <div className="preview-item" key={idx} style={{ position: 'relative', border: idx === 0 ? '2px solid var(--primary)' : '1px solid var(--border)', padding: idx === 0 ? '2px' : '0' }}>
-                  <img src={imgSrc} alt={`upload-${idx}`} style={{ borderRadius: '4px' }} />
+                <div 
+                  className={`preview-item ${draggedIdx === idx ? 'dragged' : ''}`} 
+                  key={idx} 
+                  draggable
+                  onDragStart={(e) => {
+                     setDraggedIdx(idx);
+                     if(e.dataTransfer) {
+                       e.dataTransfer.effectAllowed = 'move';
+                       e.dataTransfer.setData('text/plain', '');
+                     }
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedIdx !== null && draggedIdx !== idx) {
+                       setImages(prev => {
+                         const newArr = [...prev];
+                         const draggedItem = newArr.splice(draggedIdx, 1)[0];
+                         newArr.splice(idx, 0, draggedItem);
+                         return newArr;
+                       });
+                    }
+                    setDraggedIdx(null);
+                  }}
+                  onDragEnd={() => setDraggedIdx(null)}
+                  onTouchStart={() => setDraggedIdx(idx)}
+                  style={{ 
+                    position: 'relative', 
+                    border: idx === 0 ? '2px solid var(--primary)' : '1px solid var(--border)', 
+                    padding: idx === 0 ? '2px' : '0',
+                    opacity: draggedIdx === idx ? 0.5 : 1,
+                    cursor: 'grab',
+                    touchAction: 'none'
+                  }}
+                >
+                  <img src={imgSrc} alt={`upload-${idx}`} style={{ borderRadius: '4px', pointerEvents: 'none' }} />
                   {idx === 0 && (
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', padding: '2px 0', textAlign: 'center', fontWeight: 'bold' }}>
                       ПРЕВЬЮ
@@ -507,40 +545,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                     >
                       ★ На главную
                     </button>
-                  )}
-                  {/* Left / Right shift buttons */}
-                  {images.length > 1 && (
-                    <div style={{ position: 'absolute', bottom: idx === 0 ? '18px' : '4px', left: '4px', right: '4px', display: 'flex', justifyContent: 'space-between', zIndex: 5 }}>
-                      <button
-                        type="button"
-                        disabled={idx === 0}
-                        onClick={() => {
-                          setImages(prev => {
-                            const newArr = [...prev];
-                            [newArr[idx - 1], newArr[idx]] = [newArr[idx], newArr[idx - 1]];
-                            return newArr;
-                          });
-                        }}
-                        style={{ background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'pointer', opacity: idx === 0 ? 0 : 1, transition: '0.2s' }}
-                      >
-                         <ChevronLeft size={16} />
-                      </button>
-                      
-                      <button
-                        type="button"
-                        disabled={idx === images.length - 1}
-                        onClick={() => {
-                          setImages(prev => {
-                            const newArr = [...prev];
-                            [newArr[idx + 1], newArr[idx]] = [newArr[idx], newArr[idx + 1]];
-                            return newArr;
-                          });
-                        }}
-                        style={{ background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'pointer', opacity: idx === images.length - 1 ? 0 : 1, transition: '0.2s' }}
-                      >
-                         <ChevronRight size={16} />
-                      </button>
-                    </div>
                   )}
                 </div>
               ))}
@@ -575,10 +579,10 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             <label className="form-label">Цена (₽)</label>
             <input 
               type="text" 
-              inputMode="decimal"
               className="form-input" 
               value={price} 
               onChange={e => setPrice(e.target.value)} 
+              placeholder="Пример: 24,890"
               required
             />
           </div>
