@@ -8,8 +8,13 @@ import { supabase } from './supabaseClient';
 
 const CATEGORIES = ["Худи", "Куртки", "Джинсы", "Футболки", "Обувь", "Аксессуары"];
 
+// Массив Telegram ID тех, у кого есть доступ к Админке
+const ADMIN_IDS = [937453201]; // Ваш Telegram ID
+
 function App() {
   const [products, setProducts] = useState([]);
+
+  const [tgUser, setTgUser] = useState(null);
 
   useEffect(() => {
     // If running in Telegram Web App, force expand to fix viewport bug where 100vh gets truncated
@@ -17,6 +22,9 @@ function App() {
       window.Telegram.WebApp.expand();
       if (window.Telegram.WebApp.disableVerticalSwipes) {
         window.Telegram.WebApp.disableVerticalSwipes(); // Blocks swiping down to close the app natively
+      }
+      if (window.Telegram.WebApp.initDataUnsafe?.user) {
+        setTgUser(window.Telegram.WebApp.initDataUnsafe.user);
       }
       window.Telegram.WebApp.ready();
     }
@@ -186,7 +194,7 @@ function App() {
   const handleNavClick = (navItem) => {
     setActiveNav(navItem);
     if (navItem === 'profile') {
-      setView('admin');
+      setView('profile');
     } else if (navItem === 'tags') {
       setView('favorites');
     } else if (navItem === 'dressup') {
@@ -223,9 +231,14 @@ function App() {
             addProduct={addProduct} 
             updateProduct={updateProduct}
             deleteProduct={deleteProduct}
-            goBack={goBack} 
+            goBack={() => setView('profile')} 
             banner={banner}
             setBanner={setBanner}
+          />
+        ) : view === 'profile' ? (
+          <ProfileView 
+            tgUser={tgUser}
+            openAdmin={() => setView('admin')}
           />
         ) : view === 'details' ? (
           <DetailsView 
@@ -278,8 +291,8 @@ function App() {
           />
         )}
       </div>
-      {view !== 'details' && (
-        <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount}/>
+      {view !== 'details' && view !== 'admin' && (
+        <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount} tgUser={tgUser}/>
       )}
     </div>
   );
@@ -1056,7 +1069,64 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
   );
 }
 
-function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
+function ProfileView({ tgUser, openAdmin }) {
+  const isAdmin = tgUser && ADMIN_IDS.includes(tgUser.id);
+  
+  return (
+    <div className="profile-page page-transition" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
+      <header className="header" style={{position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 10, justifyContent: 'center'}}>
+        <div className="app-logo" style={{fontSize: '1.2rem'}}>Профиль</div>
+      </header>
+
+      <div style={{padding: '30px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1}}>
+        {tgUser ? (
+          <>
+            {tgUser.photo_url ? (
+              <img src={tgUser.photo_url} alt="Profile" style={{width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', marginBottom: '16px', border: '3px solid var(--surface-elevated)'}} />
+            ) : (
+              <div style={{width: '90px', height: '90px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', marginBottom: '16px'}}>
+                {tgUser.first_name ? tgUser.first_name[0].toUpperCase() : <User size={40} />}
+              </div>
+            )}
+            <h2 style={{fontSize: '1.4rem', marginBottom: '4px', textAlign: 'center'}}>{tgUser.first_name} {tgUser.last_name}</h2>
+            {tgUser.username && <div style={{color: 'var(--text-muted)', marginBottom: '16px'}}>@{tgUser.username}</div>}
+            
+            <div style={{background: 'var(--card-bg)', padding: '16px 20px', borderRadius: 'var(--radius-md)', margin: '20px 0', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 'var(--shadow-sm)'}}>
+              <div>Telegram ID:</div>
+              <div style={{color: 'var(--text-main)', fontSize: '1.1rem', fontWeight: 600, marginTop: '4px', fontFamily: 'monospace'}}>{tgUser.id}</div>
+              {!isAdmin && <div style={{marginTop: '12px', textAlign: 'center', fontSize: '0.8rem', lineHeight: 1.4}}>Скопируйте этот ID и добавьте в `ADMIN_IDS` в коде (App.jsx), чтобы получить доступ к Админке.</div>}
+              {isAdmin && <div style={{marginTop: '8px', color: 'var(--primary)', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Права администратора</div>}
+            </div>
+
+            {isAdmin && (
+              <button className="btn-primary" style={{marginTop: '20px', width: '100%', maxWidth: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}} onClick={openAdmin}>
+                <Edit2 size={18} /> Админ-панель
+              </button>
+            )}
+            
+            <button className="promo-btn" style={{marginTop: '12px', width: '100%', maxWidth: '300px', background: 'var(--surface-elevated)', color: 'var(--text-main)'}} onClick={() => {
+              const url = `https://t.me/DvkShopSupportBot`; // Placeholder
+              if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(url);
+              } else {
+                window.open(url, '_blank');
+              }
+            }}>
+              Написать в поддержку
+            </button>
+          </>
+        ) : (
+          <div style={{textAlign: 'center', color: 'var(--text-muted)', marginTop: '40px'}}>
+            <User size={60} style={{margin: '0 auto 16px', opacity: 0.5}} />
+            <p>Запустите мини-приложение через Telegram,<br/>чтобы загрузить профиль.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BottomNav({ activeNav, handleNavClick, cartCount = 0, tgUser }) {
   return (
     <div className="bottom-nav">
       <div className="nav-inner">
@@ -1086,7 +1156,11 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
           )}
         </div>
         <div className={`nav-item ${activeNav === 'profile' ? 'active' : ''}`} onClick={() => handleNavClick('profile')}>
-          <User size={20} />
+          {tgUser && tgUser.photo_url ? (
+            <img src={tgUser.photo_url} alt="" style={{width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', opacity: activeNav === 'profile' ? 1 : 0.6}} />
+          ) : (
+            <User size={20} />
+          )}
           <span>Профиль</span>
         </div>
       </div>
