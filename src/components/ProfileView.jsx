@@ -40,7 +40,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
         <div className="app-logo" style={{fontSize: '1.2rem'}}>Профиль</div>
       </header>
 
-      <div style={{padding: '30px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1}}>
+      <div style={{padding: '30px 20px 100px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1}}>
         {tgUser ? (
           <>
             {tgUser.photo_url ? (
@@ -144,8 +144,8 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
 
 
             {isAdmin && (
-              <button className="btn-primary" style={{marginTop: '0', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}} onClick={openAdmin}>
-                <Edit2 size={18} /> Админ-панель (Добавить товар)
+              <button style={{background: 'var(--surface-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px', marginTop: '0', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)'}} onClick={openAdmin}>
+                <Edit2 size={18} /> Панель управления (Админ)
               </button>
             )}
           </>

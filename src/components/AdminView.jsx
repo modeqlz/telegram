@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronRight, User, Package, UploadCloud, Edit2, Trash2, X, ArrowLeft } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, User, Package, UploadCloud, Edit2, Trash2, X, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../constants';
 
@@ -168,7 +168,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     const payload = {
       brand: "DVK Shop",
       name,
-      price: parseFloat(price),
+      price: parseFloat(price.toString().replace(',', '.')),
       description,
       category,
       sizes,
@@ -248,9 +248,9 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                     {user.first_name} {user.last_name}
                     {user.is_admin && <span style={{fontSize: '0.65rem', background: 'var(--primary-light)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '100px', fontWeight: 700}}>АДМИН</span>}
                   </div>
-                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px'}}>
-                    <span style={{marginRight: '8px'}}>{user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}</span>
-                    <span style={{fontWeight: 600, color: 'var(--text-main)', background: 'var(--surface-elevated)', padding: '2px 6px', borderRadius: '4px'}}>Баланс: {user.balance || 0} ₽</span>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center'}}>
+                    <span>{user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}</span>
+                    <span style={{fontWeight: 600, color: 'var(--text-main)', background: 'var(--surface-elevated)', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: '6px', display: 'inline-block'}}>Баланс: {user.balance || 0} ₽</span>
                   </div>
                 </div>
                 <button 
@@ -500,13 +500,47 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                         });
                       }}
                       style={{
-                        position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,0.6)', 
-                        color: 'white', border: '1px solid rgba(255,255,255,0.5)', borderRadius: '4px', 
+                        position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,0.7)', 
+                        color: 'white', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '4px', 
                         fontSize: '0.65rem', padding: '4px 6px', cursor: 'pointer', zIndex: 5
                       }}
                     >
-                      Сделать превью
+                      ★ На главную
                     </button>
+                  )}
+                  {/* Left / Right shift buttons */}
+                  {images.length > 1 && (
+                    <div style={{ position: 'absolute', bottom: idx === 0 ? '18px' : '4px', left: '4px', right: '4px', display: 'flex', justifyContent: 'space-between', zIndex: 5 }}>
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => {
+                          setImages(prev => {
+                            const newArr = [...prev];
+                            [newArr[idx - 1], newArr[idx]] = [newArr[idx], newArr[idx - 1]];
+                            return newArr;
+                          });
+                        }}
+                        style={{ background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'pointer', opacity: idx === 0 ? 0 : 1, transition: '0.2s' }}
+                      >
+                         <ChevronLeft size={16} />
+                      </button>
+                      
+                      <button
+                        type="button"
+                        disabled={idx === images.length - 1}
+                        onClick={() => {
+                          setImages(prev => {
+                            const newArr = [...prev];
+                            [newArr[idx + 1], newArr[idx]] = [newArr[idx], newArr[idx + 1]];
+                            return newArr;
+                          });
+                        }}
+                        style={{ background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', cursor: 'pointer', opacity: idx === images.length - 1 ? 0 : 1, transition: '0.2s' }}
+                      >
+                         <ChevronRight size={16} />
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -540,8 +574,8 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
           <div className="form-group">
             <label className="form-label">Цена (₽)</label>
             <input 
-              type="number" 
-              step="0.01" 
+              type="text" 
+              inputMode="decimal"
               className="form-input" 
               value={price} 
               onChange={e => setPrice(e.target.value)} 
