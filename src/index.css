@@ -2,20 +2,22 @@
 
 :root {
   --primary: #E60000;
-  --primary-light: #FFEBEE;
-  --primary-hover: #D30000;
-  --bg-main: #F9FAFB;
-  --card-bg: #FFFFFF;
-  --text-main: #000000;
-  --text-muted: #666666;
-  --border: #E5E7EB;
+  --primary-light: rgba(230, 0, 0, 0.12);
+  --primary-hover: #FF1A1A;
+  --bg-main: #0A0A0A;
+  --card-bg: #141414;
+  --text-main: #FFFFFF;
+  --text-secondary: #E0E0E0;
+  --text-muted: #888888;
+  --border: rgba(255, 255, 255, 0.08);
+  --surface-elevated: #1A1A1A;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
   --font-main: 'Inter', sans-serif;
 }
 
@@ -100,6 +102,12 @@ body {
   padding: 0 20px 16px;
   display: flex;
   gap: 12px;
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .search-input-wrap {
@@ -118,15 +126,22 @@ body {
   font-family: var(--font-main);
   font-size: 16px !important;
   background-color: var(--card-bg);
+  color: var(--text-main);
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   user-select: text !important;
   -webkit-user-select: text !important;
-  caret-color: #B30000 !important;
+  caret-color: var(--primary) !important;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
 }
 
 .search-input:focus {
   border-color: var(--primary);
+  background-color: var(--surface-elevated);
+  box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.15);
 }
 
 .search-icon {
@@ -157,7 +172,7 @@ body {
   margin: 0 20px;
   border-radius: var(--radius-md);
   padding: 30px 20px;
-  background: linear-gradient(135deg, var(--primary) 0%, #B30000 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #8B0000 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -206,15 +221,21 @@ body {
 .promo-banner-standalone {
   margin: 0 20px;
   display: block;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--card-bg);
 }
 
 .promo-image-standalone {
   width: 100%;
-  height: auto;
-  object-fit: contain;
-  border-radius: var(--radius-md);
+  height: 100%;
+  object-fit: cover;
   display: block;
-  box-shadow: var(--shadow-sm);
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Categories */
@@ -343,8 +364,7 @@ body {
   border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: 12px;
-  background-color: var(--bg-main);
-  /* Changed to slightly off-white instead of dark gray */
+  background-color: var(--card-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -407,17 +427,17 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 }
 
 .nav-inner {
-  background-color: #000000;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(20, 20, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-full);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 4px;
   padding: 6px 6px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
 .nav-item {
@@ -669,14 +689,14 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   align-items: center;
   font-size: 0.9rem;
   font-weight: 600;
-  background-color: var(--bg-main);
+  background-color: var(--surface-elevated);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .size-pill.active {
-  background-color: var(--text-main);
+  background-color: var(--primary);
   color: white;
 }
 
@@ -703,8 +723,9 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   display: flex;
   gap: 16px;
   align-items: center;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 100;
+  border-top: 1px solid var(--border);
 }
 
 .quantity-selector {
@@ -721,7 +742,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: white;
+  background: var(--surface-elevated);
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -738,7 +759,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 
 .add-to-cart-btn {
   flex: 1;
-  background-color: var(--text-main);
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: var(--radius-full);
@@ -794,9 +815,15 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   border: 1px solid var(--border);
   font-family: var(--font-main);
   font-size: 0.95rem;
-  background: var(--bg-main);
+  background: var(--surface-elevated);
+  color: var(--text-main);
   outline: none;
   transition: border-color 0.2s;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .form-input:focus,
@@ -846,7 +873,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 }
 
 .btn-danger-outline {
-  background-color: white;
+  background-color: var(--card-bg);
   color: var(--primary);
   border: 1px solid var(--primary);
   border-radius: var(--radius-full);
@@ -920,7 +947,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(30, 30, 30, 0.9);
   border: none;
   border-radius: 50%;
   width: 24px;
@@ -1044,15 +1071,14 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   height: 60px;
   border-radius: var(--radius-sm);
   object-fit: cover;
-  background: #f0f0f0;
-  background: #f0f0f0;
+  background: var(--surface-elevated);
 }
 
 /* --- Dressup (Outfit Builder) View --- */
 .dressup-view {
   padding-top: 20px;
   padding-bottom: 120px;
-  background-color: #ffffff; /* Pure white masks JPEG backgrounds significantly better */
+  background-color: var(--bg-main);
 }
 
 .dressup-row-wrap {
@@ -1067,7 +1093,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 .dressup-row-header .subtitle {
   display: block;
   font-weight: 500;
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.65rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -1078,7 +1104,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   display: block;
   font-weight: 700;
   font-size: 1.1rem;
-  color: #000;
+  color: var(--text-main);
   letter-spacing: -0.02em;
 }
 
@@ -1158,7 +1184,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
 .dressup-empty {
   min-width: 100%;
   text-align: center;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.9rem;
   padding: 40px 0;
 }
@@ -1194,7 +1220,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: white;
+  background: var(--card-bg);
   display: flex;
   justify-content: center;
   align-items: center;

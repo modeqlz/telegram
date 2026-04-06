@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu, Bell, Search, SlidersHorizontal, ArrowLeft, Heart, 
   Home, Tag, ShoppingBag, User, Plus, Minus, X, UploadCloud,
@@ -33,15 +33,50 @@ function App() {
     fetchProducts();
   }, []);
 
-  const [banner, setBanner] = useState(() => {
-    try {
-      const saved = localStorage.getItem('redwear_banner');
-      if (saved) {
-        return JSON.parse(saved);
+  const [banner, setBanner] = useState({ title: "", buttonText: "", image: "", isVideo: false, link: "" });
+  const [bannerId, setBannerId] = useState(null);
+
+  // Load banner from Supabase on mount
+  useEffect(() => {
+    const fetchBanner = async () => {
+      const { data, error } = await supabase
+        .from('banner')
+        .select('*')
+        .limit(1)
+        .single();
+      
+      if (!error && data) {
+        setBannerId(data.id);
+        setBanner({
+          title: data.title || '',
+          buttonText: data.button_text || '',
+          image: data.image_url || '',
+          isVideo: data.is_video || false,
+          link: data.link || ''
+        });
       }
-    } catch (e) { }
-    return { title: "Зимняя\nраспродажа\nдо 40%", buttonText: "Смотреть", image: "", isVideo: false };
-  });
+    };
+    fetchBanner();
+  }, []);
+
+  // Save banner to Supabase when it changes (debounced)
+  useEffect(() => {
+    if (!bannerId) return;
+    const timeout = setTimeout(async () => {
+      await supabase
+        .from('banner')
+        .update({
+          title: banner.title,
+          button_text: banner.buttonText,
+          image_url: banner.image,
+          is_video: banner.isVideo,
+          link: banner.link,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', bannerId);
+    }, 1000); // 1s debounce
+    return () => clearTimeout(timeout);
+  }, [banner, bannerId]);
 
   const [cartItems, setCartItems] = useState(() => {
     try {
@@ -283,9 +318,9 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
           <>
             <div className="cart-items-list" style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
               {cartItems.map(item => (
-                <div key={item.cartId} style={{display: 'flex', gap: '16px', background: 'white', padding: '12px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)'}}>
-                  <div style={{width: '80px', height: '80px', flexShrink: 0, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#f5f5f5'}}>
-                    <img src={item.images?.[0]} alt="" style={{width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'multiply'}} />
+                <div key={item.cartId} style={{display: 'flex', gap: '16px', background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)'}}>
+                  <div style={{width: '80px', height: '80px', flexShrink: 0, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--surface-elevated)'}}>
+                    <img src={item.images?.[0]} alt="" style={{width: '100%', height: '100%', objectFit: 'contain'}} />
                   </div>
                   <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
                     <div style={{fontWeight: 600, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between'}}>
@@ -296,7 +331,7 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
                     
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px'}}>
                       <div style={{fontWeight: 700}}>{Number(item.price)} ₽</div>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '12px', background: '#f5f5f5', padding: '4px 8px', borderRadius: '100px'}}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--surface-elevated)', padding: '4px 8px', borderRadius: '100px'}}>
                         <button onClick={() => updateQty(item.cartId, -1)} style={{background: 'none', border: 'none'}}><Minus size={14}/></button>
                         <span style={{fontSize: '0.9rem', fontWeight: 600, minWidth: '16px', textAlign: 'center'}}>{item.qty}</span>
                         <button onClick={() => updateQty(item.cartId, 1)} style={{background: 'none', border: 'none'}}><Plus size={14}/></button>
@@ -389,13 +424,10 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
       </header>
 
       <div className="search-section">
-        <div className="search-input-wrap">
+        <div className="search-input-wrap" style={{flex: 1}}>
           <Search className="search-icon" size={20} />
           <input type="text" className="search-input" placeholder="Поиск..." />
         </div>
-        <button className="filter-btn">
-          <SlidersHorizontal size={20} />
-        </button>
       </div>
 
       {((!banner.title || banner.title.trim() === "") && (!banner.buttonText || banner.buttonText.trim() === "") && banner.image) ? (
@@ -634,20 +666,33 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
   const [images, setImages] = useState([]);
 
 
-  // Safe Banner Image/Video Upload avoiding Base64 overhead for large videos
-  const handleBannerImageUpload = (e) => {
+  // Safe Banner Image/Video Upload to Supabase Storage
+  const handleBannerImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.type.startsWith('video/')) {
-        // For video files, we generate a local temporary URL instead of a huge Base64 string that crashes the browser
-        const url = URL.createObjectURL(file);
-        setBanner({ ...banner, image: url, isVideo: true });
-      } else {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setBanner({ ...banner, image: reader.result, isVideo: false });
-        };
-        reader.readAsDataURL(file);
+      const isVid = file.type.startsWith('video/');
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banner_${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      
+      try {
+        const { error } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file);
+          
+        if (error) {
+          console.error("Banner upload error:", error);
+          alert("Ошибка загрузки в Supabase. Проверьте права и лимиты.");
+          return;
+        }
+
+        const { data } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        // Update banner state with the real Supabase URL
+        setBanner({ ...banner, image: data.publicUrl, isVideo: isVid });
+      } catch (err) {
+        console.error("Upload failed", err);
       }
     }
   };
@@ -921,7 +966,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Цена ($)</label>
+            <label className="form-label">Цена (₽)</label>
             <input 
               type="number" 
               step="0.01" 
@@ -1016,13 +1061,11 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
           <span>Корзина</span>
           {cartCount > 0 && !activeNav.includes('cart') && (
             <div style={{
-              position: 'absolute', top: '10px', right: '10px', 
-              background: 'var(--text-main)', color: 'white', 
-              borderRadius: '50%', width: '16px', height: '16px', 
-              display: 'flex', justifyContent: 'center', alignItems: 'center', 
-              fontSize: '0.65rem', fontWeight: 700
+              position: 'absolute', top: '2px', right: '12px', 
+              background: 'var(--primary)', 
+              borderRadius: '50%', width: '8px', height: '8px', 
+              boxShadow: '0 0 0 2px rgba(20, 20, 20, 0.95)'
             }}>
-              {cartCount}
             </div>
           )}
         </div>
@@ -1036,45 +1079,50 @@ function BottomNav({ activeNav, handleNavClick, cartCount = 0 }) {
 }
 
 function FlyingItem({ item, onComplete }) {
-  const [style, setStyle] = useState({
-    transform: 'translate3d(0, 0, 0) scale(1) rotate(0deg)',
-    opacity: 1
-  });
+  const animId = useRef('fly_' + Math.random().toString(36).slice(2, 8));
+  const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-    // Precise center-to-center geometry calculation for flying objects.
-    const pillBottomOffset = 100 + 24; // approx bottom offset
-    const pillCenterY = window.innerHeight - pillBottomOffset - 32; // 32 is half the pill height
+    const pillBottomOffset = 100 + 24;
+    const pillCenterY = window.innerHeight - pillBottomOffset - 32;
     const targetLeft = (window.innerWidth / 2) - Math.min(240, window.innerWidth / 2) + 20;
-    
-    // Calculate the dynamic slot X using the slotIndex (42px distance between overlapping circle centers)
-    const pillCenterX = targetLeft + 40 + (item.slotIndex * 42); 
-    
+    const pillCenterX = targetLeft + 40 + (item.slotIndex * 42);
+
     const imgCenterX = item.startX + (item.width / 2);
     const imgCenterY = item.startY + (item.height / 2);
-    
+
     const destX = pillCenterX - imgCenterX;
     const destY = pillCenterY - imgCenterY;
-    
-    // Explicit timeout to ensure browser paints start before transitioning
-    const startTimer = setTimeout(() => {
-      setStyle({
-        transform: `translate3d(${destX}px, ${destY}px, 0) scale(0.15) rotate(${item.rot}deg)`,
-        opacity: 1
-      });
-    }, 50);
 
-    // Exact synchronization with CSS transition duration (450ms)
-    const timer = setTimeout(() => onComplete(item.id), 500);
+    // Arc midpoint — shift X toward center for a natural curve
+    const midX = destX * 0.4;
+    const midY = destY * 0.3 - 40; // lift up at midpoint
+
+    // Inject a unique @keyframes rule for this specific flight
+    const keyframes = `
+      @keyframes ${animId.current} {
+        0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
+        40% { transform: translate3d(${midX}px, ${midY}px, 0) scale(0.55) rotate(${item.rot * 0.5}deg); opacity: 1; }
+        100% { transform: translate3d(${destX}px, ${destY}px, 0) scale(0.12) rotate(${item.rot}deg); opacity: 1; }
+      }
+    `;
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = keyframes;
+    document.head.appendChild(styleSheet);
+
+    const startTimer = setTimeout(() => setAnimating(true), 30);
+    const timer = setTimeout(() => onComplete(item.id), 480);
+
     return () => {
       clearTimeout(startTimer);
       clearTimeout(timer);
+      document.head.removeChild(styleSheet);
     };
   }, [item, onComplete]);
 
   return (
-    <img 
-      src={item.img} 
+    <img
+      src={item.img}
       style={{
         position: 'fixed',
         top: item.startY,
@@ -1082,11 +1130,10 @@ function FlyingItem({ item, onComplete }) {
         width: item.width,
         height: item.height,
         objectFit: 'contain',
-        zIndex: 150, // Flies under the Pill (zIndex 200)
+        zIndex: 150,
         pointerEvents: 'none',
-        transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)', // Hardware accelerated curve
         willChange: 'transform',
-        ...style
+        animation: animating ? `${animId.current} 0.45s cubic-bezier(0.32, 0, 0.15, 1) forwards` : 'none'
       }}
       alt=""
     />
@@ -1234,29 +1281,29 @@ function DressupView({ products, addToCart, showToast }) {
           <div 
             style={{
               position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-              width: 'calc(100% - 40px)', maxWidth: '400px', background: 'white', borderRadius: '24px',
+              width: 'calc(100% - 40px)', maxWidth: '400px', background: 'var(--card-bg)', borderRadius: '24px',
               padding: '24px', zIndex: 1001,
               animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', position: 'relative' }}>
               <button 
                 onClick={() => setPreviewProduct(null)} 
-                style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#f5f5f5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
-                <X size={16} strokeWidth={3} color="#666"/>
+                style={{ position: 'absolute', top: '-10px', right: '-10px', background: 'var(--surface-elevated)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
+                <X size={16} strokeWidth={3} color="var(--text-muted)"/>
               </button>
               <div 
                id="preview-modal-img"
-               style={{ width: '100%', height: '220px', flexShrink: 0, borderRadius: '16px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+               style={{ width: '100%', height: '220px', flexShrink: 0, borderRadius: '16px', background: 'var(--surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 <img src={previewProduct.item.images?.[0] || previewProduct.item.image} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '20px' }} alt="" />
               </div>
               <div style={{ width: '100%', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.2 }}>{previewProduct.item.name}</h3>
+                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.2, color: 'var(--text-main)' }}>{previewProduct.item.name}</h3>
                 <p style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{Number(previewProduct.item.price)} ₽</p>
-                <div onClick={() => setDescExpanded(!descExpanded)} style={{ cursor: 'pointer', background: '#fafafa', padding: '12px', borderRadius: '12px' }}>
+                <div onClick={() => setDescExpanded(!descExpanded)} style={{ cursor: 'pointer', background: 'var(--surface-elevated)', padding: '12px', borderRadius: '12px' }}>
                   <p style={{ 
-                    margin: 0, fontSize: '0.95rem', color: '#555', textAlign: 'left', lineHeight: 1.4,
+                    margin: 0, fontSize: '0.95rem', color: 'var(--text-muted)', textAlign: 'left', lineHeight: 1.4,
                     display: descExpanded ? 'block' : '-webkit-box', 
                     WebkitLineClamp: descExpanded ? 'unset' : 3, 
                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -1308,14 +1355,14 @@ function DressupView({ products, addToCart, showToast }) {
             position: 'fixed',
             bottom: 'calc(100px + env(safe-area-inset-bottom, 24px))',
             left: 'calc(50vw - min(240px, 50vw) + 20px)',
-            background: '#ffffff',
+            background: 'var(--card-bg)',
             borderRadius: '50px',
             padding: '8px 16px',
           display: 'flex',
           alignItems: 'center',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           zIndex: 200,
-          border: '1px solid #E5E7EB'
+          border: '1px solid var(--border)'
         }}>
           {[
             { item: selectedTop, setter: setSelectedTop, ml: '0px', z: 3 },
@@ -1339,16 +1386,16 @@ function DressupView({ products, addToCart, showToast }) {
               zIndex: z,
               transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', background: '#f5f5f5',  boxShadow: '0 2px 8px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--card-bg)', background: 'var(--surface-elevated)',  boxShadow: '0 2px 8px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src={item.images?.[0] || item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `scale(0.85) rotate(${rot}deg)` }} />
               </div>
               <button 
                 onClick={() => setter(null)}
                 style={{
-                  position: 'absolute', top: '-2px', right: '-2px', background: '#e5e7eb', 
-                  color: '#666', border: '2px solid white', borderRadius: '50%', width: '18px', height: '18px', 
+                  position: 'absolute', top: '-2px', right: '-2px', background: 'var(--surface-elevated)', 
+                  color: 'var(--text-muted)', border: '2px solid var(--card-bg)', borderRadius: '50%', width: '18px', height: '18px', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}
               >
                 <X size={10} strokeWidth={3} />
