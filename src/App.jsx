@@ -10,7 +10,7 @@ import { supabase } from './supabaseClient';
 const CATEGORIES = ["Худи", "Куртки", "Джинсы", "Футболки", "Обувь", "Аксессуары"];
 
 // Массив Telegram ID тех, у кого есть доступ к Админке
-const ADMIN_IDS = [937453201]; // Ваш Telegram ID
+const ADMIN_IDS = [937453201, 8557314630]; // Ваши Telegram ID
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -235,6 +235,7 @@ function App() {
             goBack={() => setView('profile')} 
             banner={banner}
             setBanner={setBanner}
+            showToast={showToast}
           />
         ) : view === 'profile' ? (
           <ProfileView 
@@ -270,6 +271,8 @@ function App() {
             activeNav={activeNav}
             handleNavClick={handleNavClick}
             cartCount={cartCount}
+            tgUser={tgUser}
+            showToast={showToast}
           />
         ) : view === 'dressup' ? (
           <DressupView
@@ -299,8 +302,9 @@ function App() {
   );
 }
 
-function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }) {
+function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick, tgUser, showToast }) {
   const total = cartItems.reduce((acc, item) => acc + (parseFloat(item.price) * item.qty), 0);
+  const [isOrdering, setIsOrdering] = useState(false);
 
   const removeItem = (cartId) => {
     setCartItems(prev => prev.filter(item => item.cartId !== cartId));
@@ -314,6 +318,51 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
       }
       return item;
     }));
+  };
+
+  const placeOrder = async () => {
+    if (!tgUser) {
+      showToast('Откройте приложение через Telegram');
+      return;
+    }
+    if (cartItems.length === 0) return;
+    
+    setIsOrdering(true);
+    try {
+      const orderItems = cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        qty: item.qty,
+        size: item.selectedSize || null,
+        image: item.images?.[0] || ''
+      }));
+
+      const { error } = await supabase
+        .from('orders')
+        .insert({
+          telegram_id: tgUser.id,
+          telegram_username: tgUser.username || '',
+          telegram_name: `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim(),
+          items: orderItems,
+          total: total,
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Order error:', error);
+        showToast('Ошибка при оформлении заказа');
+      } else {
+        showToast('Заказ оформлен! Ожидайте подтверждения.');
+        setCartItems([]);
+        handleNavClick('profile');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Ошибка сети');
+    } finally {
+      setIsOrdering(false);
+    }
   };
 
   return (
@@ -364,8 +413,13 @@ function CartView({ cartItems, setCartItems, goBack, activeNav, handleNavClick }
                 <span>К оплате:</span>
                 <span>{total} ₽</span>
               </div>
-              <button className="btn-primary" style={{width: '100%', height: '56px', fontSize: '1.1rem'}} onClick={() => alert('Переход к оплате...')}>
-                Оформить заказ
+              <button 
+                className="btn-primary" 
+                style={{width: '100%', height: '56px', fontSize: '1.1rem', opacity: isOrdering ? 0.6 : 1}} 
+                onClick={placeOrder}
+                disabled={isOrdering}
+              >
+                {isOrdering ? 'Оформляем...' : 'Оформить заказ'}
               </button>
             </div>
           </>
@@ -684,9 +738,10 @@ function DetailsView({ product, goBack, favorites, toggleFavorite, addToCart }) 
   );
 }
 
-function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack, banner, setBanner }) {
-  const [adminTab, setAdminTab] = useState('list');
+function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack, banner, setBanner, showToast }) {
+  const [adminTab, setAdminTab] = useState('orders');
   const [editingId, setEditingId] = useState(null);
+  const [orders, setOrders] = useState([]);
   
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -694,6 +749,44 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
   const [description, setDescription] = useState('');
   const [sizesRaw, setSizesRaw] = useState('');
   const [images, setImages] = useState([]);
+
+  // Fetch orders from Supabase
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && data) setOrders(data);
+    };
+    fetchOrders();
+  }, [adminTab]);
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+    if (!error) {
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      showToast(`Статус обновлён: ${statusLabels[newStatus]}`);
+    }
+  };
+
+  const statusLabels = {
+    pending: 'Ожидает',
+    confirmed: 'Подтверждён',
+    shipped: 'Отправлен',
+    delivered: 'Доставлен',
+    cancelled: 'Отменён'
+  };
+  const statusColors = {
+    pending: '#f59e0b',
+    confirmed: '#3b82f6',
+    shipped: '#8b5cf6',
+    delivered: '#22c55e',
+    cancelled: '#ef4444'
+  };
 
 
   // Safe Banner Image/Video Upload to Supabase Storage
@@ -823,16 +916,113 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
       </header>
 
       <div className="categories" style={{padding: '0 0 24px 0'}}>
+        <div className={`category-pill ${adminTab === 'orders' ? 'active' : ''}`} onClick={() => { setAdminTab('orders'); cancelEdit(); }}>
+          Заказы {orders.filter(o => o.status === 'pending').length > 0 && `(${orders.filter(o => o.status === 'pending').length})`}
+        </div>
+        <div className={`category-pill ${adminTab === 'add_product' ? 'active' : ''}`} onClick={() => { setAdminTab('add_product'); cancelEdit(); }}>
+          {editingId ? 'Редакт.' : '+ Товар'}
+        </div>
+        <div className={`category-pill ${adminTab === 'list' ? 'active' : ''}`} onClick={() => { setAdminTab('list'); cancelEdit(); }}>
+          Товары ({products.length})
+        </div>
         <div className={`category-pill ${adminTab === 'banner' ? 'active' : ''}`} onClick={() => { setAdminTab('banner'); cancelEdit(); }}>
           Баннер
         </div>
-        <div className={`category-pill ${adminTab === 'add_product' ? 'active' : ''}`} onClick={() => { setAdminTab('add_product'); cancelEdit(); }}>
-          {editingId ? 'Редакт.' : 'Новый товар'}
-        </div>
-        <div className={`category-pill ${adminTab === 'list' ? 'active' : ''}`} onClick={() => { setAdminTab('list'); cancelEdit(); }}>
-          Объявления
-        </div>
       </div>
+
+      {/* Orders Management */}
+      {adminTab === 'orders' && (
+        <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+          {orders.length === 0 ? (
+            <div className="empty-state" style={{padding: '40px 20px', textAlign: 'center'}}>
+              <Package size={48} style={{margin: '0 auto 16px', color: 'var(--text-muted)', opacity: 0.5}} />
+              <p style={{color: 'var(--text-muted)'}}>Заказов пока нет</p>
+            </div>
+          ) : orders.map(order => (
+            <div key={order.id} style={{background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '16px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)'}}>
+              {/* Order header */}
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                <div>
+                  <div style={{fontWeight: 700, fontSize: '1rem'}}>{order.telegram_name || 'Покупатель'}</div>
+                  {order.telegram_username && (
+                    <div 
+                      style={{fontSize: '0.8rem', color: 'var(--primary)', cursor: 'pointer', marginTop: '2px'}}
+                      onClick={() => {
+                        const url = `https://t.me/${order.telegram_username}`;
+                        if (window.Telegram && window.Telegram.WebApp) {
+                          window.Telegram.WebApp.openTelegramLink(url);
+                        } else {
+                          window.open(url, '_blank');
+                        }
+                      }}
+                    >
+                      @{order.telegram_username}
+                    </div>
+                  )}
+                </div>
+                <div style={{
+                  padding: '4px 10px', 
+                  borderRadius: 'var(--radius-full)', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 600,
+                  background: `${statusColors[order.status]}20`,
+                  color: statusColors[order.status],
+                  border: `1px solid ${statusColors[order.status]}40`
+                }}>
+                  {statusLabels[order.status] || order.status}
+                </div>
+              </div>
+
+              {/* Order items */}
+              <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
+                {(order.items || []).map((item, idx) => (
+                  <div key={idx} style={{display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem'}}>
+                    {item.image && <img src={item.image} alt="" style={{width: '36px', height: '36px', objectFit: 'contain', borderRadius: '6px', background: 'var(--surface-elevated)'}} />}
+                    <div style={{flex: 1}}>
+                      <span style={{fontWeight: 500}}>{item.name}</span>
+                      {item.size && <span style={{color: 'var(--text-muted)'}}> • {item.size}</span>}
+                    </div>
+                    <span style={{color: 'var(--text-muted)'}}>{item.qty}x</span>
+                    <span style={{fontWeight: 600}}>{Number(item.price) * item.qty} ₽</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Order total & date */}
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '10px', marginBottom: '12px'}}>
+                <div style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>{new Date(order.created_at).toLocaleString('ru-RU')}</div>
+                <div style={{fontWeight: 700, fontSize: '1.05rem'}}>{order.total} ₽</div>
+              </div>
+
+              {/* Status actions */}
+              {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                  {order.status === 'pending' && (
+                    <>
+                      <button className="btn-primary" style={{flex: 1, padding: '8px', fontSize: '0.8rem'}} onClick={() => updateOrderStatus(order.id, 'confirmed')}>
+                        Подтвердить
+                      </button>
+                      <button style={{flex: 1, padding: '8px', fontSize: '0.8rem', background: 'var(--surface-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer'}} onClick={() => updateOrderStatus(order.id, 'cancelled')}>
+                        Отклонить
+                      </button>
+                    </>
+                  )}
+                  {order.status === 'confirmed' && (
+                    <button style={{flex: 1, padding: '8px', fontSize: '0.8rem', background: '#8b5cf620', color: '#8b5cf6', border: '1px solid #8b5cf640', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 600}} onClick={() => updateOrderStatus(order.id, 'shipped')}>
+                      Отправлен
+                    </button>
+                  )}
+                  {order.status === 'shipped' && (
+                    <button style={{flex: 1, padding: '8px', fontSize: '0.8rem', background: '#22c55e20', color: '#22c55e', border: '1px solid #22c55e40', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 600}} onClick={() => updateOrderStatus(order.id, 'delivered')}>
+                      Доставлен
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Banner Configuration Card */}
       {adminTab === 'banner' && (
@@ -1073,6 +1263,25 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
 function ProfileView({ tgUser, openAdmin }) {
   const isAdmin = tgUser && ADMIN_IDS.includes(tgUser.id);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [myOrders, setMyOrders] = useState([]);
+
+  const statusLabels = { pending: '\u041e\u0436\u0438\u0434\u0430\u0435\u0442', confirmed: '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043d', shipped: '\u041e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d', delivered: '\u0414\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d', cancelled: '\u041e\u0442\u043c\u0435\u043d\u0451\u043d' };
+  const statusColors = { pending: '#f59e0b', confirmed: '#3b82f6', shipped: '#8b5cf6', delivered: '#22c55e', cancelled: '#ef4444' };
+
+  useEffect(() => {
+    if (!tgUser) return;
+    const fetchMyOrders = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('telegram_id', tgUser.id)
+        .order('created_at', { ascending: false });
+      if (!error && data) setMyOrders(data);
+    };
+    fetchMyOrders();
+  }, [tgUser]);
+
+  const activeOrders = myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
   
   return (
     <div className="profile-page page-transition" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
@@ -1093,18 +1302,40 @@ function ProfileView({ tgUser, openAdmin }) {
             <h2 style={{fontSize: '1.4rem', marginBottom: '4px', textAlign: 'center'}}>{tgUser.first_name} {tgUser.last_name}</h2>
             {tgUser.username && <div style={{color: 'var(--text-muted)', marginBottom: '16px'}}>@{tgUser.username}</div>}
             
-            {/* Блок заказов */}
+            {/* Orders block - dynamic */}
             <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)'}}>
               <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '1.1rem'}}>
                   <Package size={20} color="var(--primary)" />
                   Мои заказы
                 </div>
-                <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>0 активных</div>
+                <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{activeOrders.length} активных</div>
               </div>
-              <div style={{textAlign: 'center', padding: '24px 0', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)'}}>
-                <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>У вас пока нет активных заказов</div>
-              </div>
+              {myOrders.length === 0 ? (
+                <div style={{textAlign: 'center', padding: '24px 0', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)'}}>
+                  <div style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>У вас пока нет заказов</div>
+                </div>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                  {myOrders.slice(0, 5).map(order => (
+                    <div key={order.id} style={{background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)', padding: '12px'}}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
+                        <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{new Date(order.created_at).toLocaleDateString('ru-RU')}</div>
+                        <div style={{
+                          padding: '2px 8px', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', fontWeight: 600,
+                          background: `${statusColors[order.status]}20`, color: statusColors[order.status]
+                        }}>
+                          {statusLabels[order.status] || order.status}
+                        </div>
+                      </div>
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <div style={{fontSize: '0.85rem'}}>{(order.items || []).length} товар{(order.items || []).length > 4 ? 'ов' : (order.items || []).length > 1 ? 'а' : ''}</div>
+                        <div style={{fontWeight: 700}}>{order.total} ₽</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Меню информации */}
@@ -1175,7 +1406,7 @@ function ProfileView({ tgUser, openAdmin }) {
                 <div><span style={{color: 'var(--text-main)', fontWeight: 600}}>Оплата:</span><br/>Безопасная оплата картой онлайн или при получении в пункте выдачи после примерки.</div>
               </div>
             </div>
-            <button className="promo-btn" style={{width: '100%', marginTop: '20px'}} onClick={() => setShowDeliveryModal(false)}>
+            <button className="btn-primary" style={{width: '100%', marginTop: '20px'}} onClick={() => setShowDeliveryModal(false)}>
               Понятно
             </button>
           </div>
