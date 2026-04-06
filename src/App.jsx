@@ -789,8 +789,10 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
   const [description, setDescription] = useState('');
   const [sizesRaw, setSizesRaw] = useState('');
   const [images, setImages] = useState([]);
+  const [usersList, setUsersList] = useState([]);
+  const [clientSearchText, setClientSearchText] = useState('');
 
-  // Fetch orders from Supabase
+  // Fetch orders or users from Supabase
   useEffect(() => {
     const fetchOrders = async () => {
       const { data, error } = await supabase
@@ -799,7 +801,17 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
         .order('created_at', { ascending: false });
       if (!error && data) setOrders(data);
     };
-    fetchOrders();
+
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('last_visit', { ascending: false });
+      if (!error && data) setUsersList(data);
+    };
+
+    if (adminTab === 'orders') fetchOrders();
+    if (adminTab === 'clients') fetchUsers();
   }, [adminTab]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -959,6 +971,9 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
         <div className={`category-pill ${adminTab === 'orders' ? 'active' : ''}`} onClick={() => { setAdminTab('orders'); cancelEdit(); }}>
           Заказы {orders.filter(o => o.status === 'pending').length > 0 && `(${orders.filter(o => o.status === 'pending').length})`}
         </div>
+        <div className={`category-pill ${adminTab === 'clients' ? 'active' : ''}`} onClick={() => { setAdminTab('clients'); cancelEdit(); }}>
+          Клиенты
+        </div>
         <div className={`category-pill ${adminTab === 'add_product' ? 'active' : ''}`} onClick={() => { setAdminTab('add_product'); cancelEdit(); }}>
           {editingId ? 'Редакт.' : '+ Товар'}
         </div>
@@ -969,6 +984,58 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
           Баннер
         </div>
       </div>
+
+      {/* Clients Management */}
+      {adminTab === 'clients' && (
+        <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+          <div className="search-input-wrap" style={{width: '100%', marginBottom: '8px'}}>
+            <Search className="search-icon" size={18} />
+            <input 
+              type="text" 
+              className="search-input" 
+              placeholder="Поиск по ID, @username или имени..." 
+              value={clientSearchText}
+              onChange={(e) => setClientSearchText(e.target.value)}
+              style={{padding: '12px 12px 12px 40px', fontSize: '0.9rem'}}
+            />
+          </div>
+          
+          <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+            {usersList.filter(u => {
+               if(!clientSearchText) return true;
+               const q = clientSearchText.toLowerCase();
+               return (u.username && u.username.toLowerCase().includes(q)) || 
+                      (u.first_name && u.first_name.toLowerCase().includes(q)) || 
+                      String(u.telegram_id).includes(q);
+            }).map(user => (
+              <div key={user.telegram_id} style={{background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '16px', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'center', cursor: 'pointer', boxShadow: 'var(--shadow-sm)'}} onClick={() => showToast('Панель управления пока в разработке')}>
+                <div style={{position: 'relative'}}>
+                  {user.photo_url ? (
+                    <img src={user.photo_url} alt="" style={{width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover'}} />
+                  ) : (
+                    <div style={{width: '46px', height: '46px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 700}}>{user.first_name ? user.first_name[0] : <User size={20}/>}</div>
+                  )}
+                  {/* Status dot (online indicator) - real-time WS connection to be added later */}
+                  <div style={{position: 'absolute', bottom: 0, right: -2, width: '12px', height: '12px', borderRadius: '50%', background: (new Date() - new Date(user.last_visit)) < 15 * 60000 ? '#22c55e' : '#6b7280', border: '2px solid var(--card-bg)'}}></div>
+                </div>
+                <div style={{flex: 1}}>
+                  <div style={{fontWeight: 600, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    {user.first_name} {user.last_name}
+                    {user.is_admin && <span style={{fontSize: '0.65rem', background: 'var(--primary-light)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '100px', fontWeight: 700}}>АДМИН</span>}
+                  </div>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+                    {user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}
+                  </div>
+                </div>
+                <ChevronRight size={20} color="var(--text-muted)" />
+              </div>
+            ))}
+            {usersList.length === 0 && (
+              <div style={{textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px'}}>Загрузка...</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Orders Management */}
       {adminTab === 'orders' && (
