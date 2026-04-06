@@ -14,8 +14,8 @@ const ADMIN_IDS = [937453201, 8557314630]; // Ваши Telegram ID
 
 function App() {
   const [products, setProducts] = useState([]);
-
   const [tgUser, setTgUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // If running in Telegram Web App, force expand to fix viewport bug where 100vh gets truncated
@@ -25,7 +25,31 @@ function App() {
         window.Telegram.WebApp.disableVerticalSwipes(); // Blocks swiping down to close the app natively
       }
       if (window.Telegram.WebApp.initDataUnsafe?.user) {
-        setTgUser(window.Telegram.WebApp.initDataUnsafe.user);
+        const user = window.Telegram.WebApp.initDataUnsafe.user;
+        setTgUser(user);
+        
+        // Sync user with Supabase and check admin rights
+        const syncUser = async () => {
+          try {
+            await supabase.from('users').upsert({
+              telegram_id: user.id,
+              username: user.username || '',
+              first_name: user.first_name || '',
+              last_name: user.last_name || '',
+              photo_url: user.photo_url || '',
+              last_visit: new Date().toISOString()
+            }, { onConflict: 'telegram_id' });
+            
+            const { data } = await supabase.from('users').select('is_admin').eq('telegram_id', user.id).single();
+            if ((data && data.is_admin) || ADMIN_IDS.includes(user.id)) {
+              setIsAdmin(true);
+            }
+          } catch (e) {
+            console.error("Error syncing user:", e);
+            if (ADMIN_IDS.includes(user.id)) setIsAdmin(true);
+          }
+        };
+        syncUser();
       }
       window.Telegram.WebApp.ready();
     }
@@ -240,6 +264,7 @@ function App() {
         ) : view === 'profile' ? (
           <ProfileView 
             tgUser={tgUser}
+            isAdmin={isAdmin}
             openAdmin={() => setView('admin')}
           />
         ) : view === 'details' ? (
@@ -1260,8 +1285,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
   );
 }
 
-function ProfileView({ tgUser, openAdmin }) {
-  const isAdmin = tgUser && ADMIN_IDS.includes(tgUser.id);
+function ProfileView({ tgUser, isAdmin, openAdmin }) {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
 
