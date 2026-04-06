@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
-const CATEGORIES = ["Худи", "Куртки", "Джинсы", "Футболки", "Обувь"];
+const CATEGORIES = ["Худи", "Куртки", "Джинсы", "Футболки", "Обувь", "Аксессуары"];
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -409,12 +409,19 @@ function FavoritesView({ products, openDetails, favorites, toggleFavorite, activ
 
 function HomeView({ products, openDetails, activeCategory, setActiveCategory, favorites, toggleFavorite, activeNav, handleNavClick, banner, cartCount }) {
   const [isMuted, setIsMuted] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const displayedProducts = activeCategory === "Все" 
+  let displayedProducts = activeCategory === "Все" 
     ? products 
-    : products.filter(p => p.category === activeCategory).length > 0 
-      ? products.filter(p => p.category === activeCategory)
-      : [];
+    : products.filter(p => p.category === activeCategory);
+
+  if (searchQuery.trim() !== "") {
+    const query = searchQuery.toLowerCase();
+    displayedProducts = displayedProducts.filter(p => 
+      (p.name && p.name.toLowerCase().includes(query)) || 
+      (p.brand && p.brand.toLowerCase().includes(query))
+    );
+  }
 
   const isVideo = banner && (banner.isVideo || (banner.image && banner.image.startsWith('data:video')));
 
@@ -429,7 +436,13 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
       <div className="search-section">
         <div className="search-input-wrap" style={{flex: 1}}>
           <Search className="search-icon" size={20} />
-          <input type="text" className="search-input" placeholder="Поиск..." />
+          <input 
+            type="text" 
+            className="search-input" 
+            placeholder="Поиск..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 
