@@ -15,6 +15,9 @@ function App() {
     // If running in Telegram Web App, force expand to fix viewport bug where 100vh gets truncated
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.expand();
+      if (window.Telegram.WebApp.disableVerticalSwipes) {
+        window.Telegram.WebApp.disableVerticalSwipes(); // Blocks swiping down to close the app natively
+      }
       window.Telegram.WebApp.ready();
     }
 
@@ -1152,6 +1155,36 @@ function DressupView({ products, addToCart, showToast }) {
   const [previewProduct, setPreviewProduct] = useState(null);
   const [descExpanded, setDescExpanded] = useState(false);
 
+  // Restore dynamic center scrolling highlight using Intersection Observer
+  useEffect(() => {
+    const containers = document.querySelectorAll('.dressup-scroll');
+    const observers = [];
+
+    containers.forEach(container => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('centered');
+          } else {
+            entry.target.classList.remove('centered');
+          }
+        });
+      }, {
+        root: container,
+        rootMargin: '0px -40% 0px -40%', // Triggers when item reaches the middle 20% of the container
+        threshold: 0
+      });
+
+      const children = container.querySelectorAll('.dressup-item');
+      children.forEach(c => observer.observe(c));
+      observers.push(observer);
+    });
+
+    return () => {
+      observers.forEach(obs => obs.disconnect());
+    };
+  }, [tops, bottoms, shoes]);
+
   const handleSelect = (e, item, setter, slotIndex) => {
     // Generate flying animation
     const imgEl = e.currentTarget.querySelector('img');
@@ -1220,7 +1253,7 @@ function DressupView({ products, addToCart, showToast }) {
           {tops.length > 0 ? tops.map(p => (
             <div 
               key={p.id} 
-              className={`dressup-item ${selectedTop?.id === p.id ? 'selected' : ''}`}
+              className="dressup-item"
               onClick={(e) => handleSelect(e, p, setSelectedTop, 0)}
             >
               <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
@@ -1240,7 +1273,7 @@ function DressupView({ products, addToCart, showToast }) {
           {bottoms.length > 0 ? bottoms.map(p => (
             <div 
               key={p.id} 
-              className={`dressup-item ${selectedBottom?.id === p.id ? 'selected' : ''}`}
+              className="dressup-item"
               onClick={(e) => handleSelect(e, p, setSelectedBottom, selectedTop ? 1 : 0)}
             >
               <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
@@ -1260,7 +1293,7 @@ function DressupView({ products, addToCart, showToast }) {
           {shoes.length > 0 ? shoes.map(p => (
             <div 
               key={p.id} 
-              className={`dressup-item ${selectedShoe?.id === p.id ? 'selected' : ''}`}
+              className="dressup-item"
               onClick={(e) => handleSelect(e, p, setSelectedShoe, (selectedTop ? 1 : 0) + (selectedBottom ? 1 : 0))}
             >
               <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />

@@ -43,6 +43,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight */
   user-select: none; /* Prevent accidental text selection while swiping */
+  overscroll-behavior-y: none; /* Block Telegram app from closing when pulling down */
 }
 
 /* Mobile App Wrapper */
@@ -1158,20 +1159,19 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   height: 100%;
   object-fit: contain;
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-  mix-blend-mode: multiply;
   
   /* Unselected clothing: slightly grayer */
   filter: grayscale(60%);
 }
 
-.dressup-item.selected {
+.dressup-item.centered {
   /* Selected clothing: bigger and highly visible */
   transform: scale(1.15);
   opacity: 1;
   z-index: 10;
 }
 
-.dressup-item.selected img {
+.dressup-item.centered img {
   opacity: 1;
   /* Selected clothing: full vibrant color */
   filter: grayscale(0%);
