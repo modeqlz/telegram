@@ -233,14 +233,14 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                       (u.first_name && u.first_name.toLowerCase().includes(q)) || 
                       String(u.telegram_id).includes(q);
             }).map(user => (
-              <div key={user.telegram_id} style={{background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '16px', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'center', cursor: 'pointer', boxShadow: 'var(--shadow-sm)'}} onClick={() => showToast('Панель управления пока в разработке')}>
+              <div key={user.telegram_id} style={{background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '16px', border: '1px solid var(--border)', display: 'flex', gap: '16px', alignItems: 'center', boxShadow: 'var(--shadow-sm)'}}>
                 <div style={{position: 'relative'}}>
                   {user.photo_url ? (
                     <img src={user.photo_url} alt="" style={{width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover'}} />
                   ) : (
                     <div style={{width: '46px', height: '46px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 700}}>{user.first_name ? user.first_name[0] : <User size={20}/>}</div>
                   )}
-                  {/* Status dot (online indicator) - real-time WS connection to be added later */}
+                  {/* Status dot */}
                   <div style={{position: 'absolute', bottom: 0, right: -2, width: '12px', height: '12px', borderRadius: '50%', background: (new Date() - new Date(user.last_visit)) < 15 * 60000 ? '#22c55e' : '#6b7280', border: '2px solid var(--card-bg)'}}></div>
                 </div>
                 <div style={{flex: 1}}>
@@ -248,11 +248,31 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                     {user.first_name} {user.last_name}
                     {user.is_admin && <span style={{fontSize: '0.65rem', background: 'var(--primary-light)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '100px', fontWeight: 700}}>АДМИН</span>}
                   </div>
-                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                    {user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px'}}>
+                    <span style={{marginRight: '8px'}}>{user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}</span>
+                    <span style={{fontWeight: 600, color: 'var(--text-main)', background: 'var(--surface-elevated)', padding: '2px 6px', borderRadius: '4px'}}>Баланс: {user.balance || 0} ₽</span>
                   </div>
                 </div>
-                <ChevronRight size={20} color="var(--text-muted)" />
+                <button 
+                  style={{background: 'var(--surface-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', color: 'var(--text-main)'}}
+                  onClick={async () => {
+                    const newBalStr = window.prompt(`Введите новый баланс для ${user.first_name}:`, user.balance || 0);
+                    if (newBalStr !== null) {
+                      const newBal = Number(newBalStr);
+                      if (!isNaN(newBal)) {
+                         const { error } = await supabase.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
+                         if (!error) {
+                           setUsersList(prev => prev.map(u => u.telegram_id === user.telegram_id ? {...u, balance: newBal} : u));
+                           showToast('Баланс обновлён!');
+                         } else {
+                           showToast('Ошибка при обновлении баланса');
+                         }
+                      }
+                    }
+                  }}
+                >
+                  Баланс
+                </button>
               </div>
             ))}
             {usersList.length === 0 && (

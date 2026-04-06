@@ -59,7 +59,23 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
              <div className="skeleton-loader" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }} />
           )}
           {isVideo ? (
-             <video src={banner.image} onLoadedData={() => setMediaLoaded(true)} autoPlay loop muted={isMuted} playsInline controls={false} disablePictureInPicture preload="auto" className="promo-image-standalone" style={{pointerEvents: 'none', opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
+             <video 
+               src={banner.image} 
+               onLoadedData={(e) => { 
+                 setMediaLoaded(true); 
+                 e.target.play().catch(() => {}); 
+               }} 
+               autoPlay 
+               loop 
+               muted={isMuted} 
+               defaultMuted 
+               playsInline 
+               controls={false} 
+               disablePictureInPicture 
+               preload="auto" 
+               className="promo-image-standalone" 
+               style={{pointerEvents: 'none', opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} 
+             />
           ) : (
              <img src={banner.image} onLoad={() => setMediaLoaded(true)} alt="Promo" className="promo-image-standalone" style={{opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
           )}
@@ -102,7 +118,23 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
                 )}
                 {isVideo ? (
                   <>
-                    <video src={banner.image} onLoadedData={() => setMediaLoaded(true)} autoPlay loop muted={isMuted} playsInline controls={false} disablePictureInPicture preload="auto" className="promo-image" style={{pointerEvents: 'none', opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
+                    <video 
+                      src={banner.image} 
+                      onLoadedData={(e) => { 
+                        setMediaLoaded(true); 
+                        e.target.play().catch(() => {}); 
+                      }} 
+                      autoPlay 
+                      loop 
+                      muted={isMuted} 
+                      defaultMuted 
+                      playsInline 
+                      controls={false} 
+                      disablePictureInPicture 
+                      preload="auto" 
+                      className="promo-image" 
+                      style={{pointerEvents: 'none', opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} 
+                    />
                     {mediaLoaded && (
                       <button 
                          onClick={(e) => { e.preventDefault(); setIsMuted(!isMuted); }}

@@ -67,9 +67,7 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
   const subcatScrollRef = useRef(null);
   const [activeSub, setActiveSub] = useState('Все');
 
-  const filteredItems = activeSub === 'Все' 
-    ? allItems 
-    : allItems.filter(p => p.category === activeSub);
+  // No more filteredItems variable needed, handling via CSS
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -93,25 +91,17 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
     children.forEach(c => observer.observe(c));
 
     return () => observer.disconnect();
-  }, [filteredItems]);
+  }, [allItems]);
 
   useEffect(() => {
     const container = subcatScrollRef.current;
     if (!container) return;
 
-    let timeoutId = null;
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          // Immediately apply visual highlight
           entry.target.classList.add('centered');
-          
-          // Debounce the actual filter update to prevent jerky scrolling of items below
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            setActiveSub(entry.target.dataset.key);
-          }, 300); // Wait 300ms after scroll settles to change categories
+          setActiveSub(entry.target.dataset.key);
         } else {
           entry.target.classList.remove('centered');
         }
@@ -148,7 +138,7 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
                 const container = el.parentElement;
                 const scrollLeft = el.offsetLeft - container.offsetLeft - (container.clientWidth / 2) + (el.clientWidth / 2);
                 container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-                clearTimeout(timeoutId); // skip delay on manual click
+                container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
                 setActiveSub(sub.key);
               }}
             >
@@ -158,15 +148,18 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
         </div>
       </div>
       <div className="dressup-scroll" ref={scrollRef}>
-        {filteredItems.length > 0 ? filteredItems.map(p => (
-          <div 
-            key={p.id} 
-            className={`dressup-item ${selected?.id === p.id ? 'selected' : ''}`}
-            onClick={(e) => onSelect(e, p)}
-          >
-            <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
-          </div>
-        )) : <div className="dressup-empty">{emptyText}</div>}
+        {allItems.length > 0 ? allItems.map(p => {
+          const isMatch = activeSub === 'Все' || p.category === activeSub;
+          return (
+            <div 
+              key={p.id} 
+              className={`dressup-item ${selected?.id === p.id ? 'selected' : ''} ${!isMatch ? 'hidden' : ''}`}
+              onClick={(e) => isMatch && onSelect(e, p)}
+            >
+              <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} />
+            </div>
+          );
+        }) : <div className="dressup-empty">{emptyText}</div>}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient';
 export function ProfileView({ tgUser, isAdmin, openAdmin }) {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
+  const [dbUser, setDbUser] = useState(null);
 
   const statusLabels = { pending: '\u041e\u0436\u0438\u0434\u0430\u0435\u0442', confirmed: '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043d', shipped: '\u041e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d', delivered: '\u0414\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d', cancelled: '\u041e\u0442\u043c\u0435\u043d\u0451\u043d' };
   const statusColors = { pending: '#f59e0b', confirmed: '#3b82f6', shipped: '#8b5cf6', delivered: '#22c55e', cancelled: '#ef4444' };
@@ -19,7 +20,16 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
         .order('created_at', { ascending: false });
       if (!error && data) setMyOrders(data);
     };
+    const fetchDbUser = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('telegram_id', tgUser.id)
+        .single();
+      if (!error && data) setDbUser(data);
+    };
     fetchMyOrders();
+    fetchDbUser();
   }, [tgUser]);
 
   const activeOrders = myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
@@ -43,6 +53,28 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
             <h2 style={{fontSize: '1.4rem', marginBottom: '4px', textAlign: 'center'}}>{tgUser.first_name} {tgUser.last_name}</h2>
             {tgUser.username && <div style={{color: 'var(--text-muted)', marginBottom: '16px'}}>@{tgUser.username}</div>}
             
+            {/* Баланс */}
+            <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <div>
+                <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>Мой баланс</div>
+                <div style={{fontSize: '1.5rem', fontWeight: 700}}>{dbUser?.balance || 0} ₽</div>
+              </div>
+              <button 
+                className="btn-primary" 
+                style={{padding: '8px 16px', fontSize: '0.9rem', borderRadius: 'var(--radius-full)', margin: 0, width: 'auto'}}
+                onClick={() => {
+                  const url = `https://t.me/DvkShopSupportBot`; // Заглушка
+                  if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.openTelegramLink(url);
+                  } else {
+                    window.open(url, '_blank');
+                  }
+                }}
+              >
+                Пополнить
+              </button>
+            </div>
+
             {/* Orders block - dynamic */}
             <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)'}}>
               <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
