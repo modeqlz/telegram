@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu, Bell, Search, SlidersHorizontal, ArrowLeft, Heart, 
   Home, Tag, ShoppingBag, User, Plus, Minus, X, UploadCloud,
-  Edit2, Trash2, Volume2, VolumeX, Layers, Package, Info, ChevronRight, HelpCircle
+  Edit2, Trash2, Volume2, VolumeX, Layers, Package, Info, ChevronRight, HelpCircle,
+  Truck, Zap, CreditCard
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
@@ -1137,11 +1138,6 @@ function ProfileView({ tgUser, openAdmin }) {
               </div>
             </div>
 
-            {/* Внутренняя инфа (видна только текущему пользователю, если он админ) */}
-            <div style={{width: '100%', maxWidth: '340px', background: 'var(--bg-main)', padding: '12px', borderRadius: 'var(--radius-sm)', marginBottom: '20px', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px dashed var(--border)'}}>
-              <div>Telegram ID: <span style={{color: 'var(--text-main)', fontFamily: 'monospace'}}>{tgUser.id}</span></div>
-              {isAdmin && <div style={{marginTop: '4px', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em'}}>Права администратора активны</div>}
-            </div>
 
             {isAdmin && (
               <button className="btn-primary" style={{marginTop: '0', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}} onClick={openAdmin}>
@@ -1165,10 +1161,19 @@ function ProfileView({ tgUser, openAdmin }) {
               <X size={18} />
             </button>
             <h3 style={{fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px', color: 'var(--text-main)'}}>Условия доставки</h3>
-            <div style={{fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '12px'}}>
-              <p>📦 <strong>Доставка СДЭК:</strong> Осуществляется по всей России и странам СНГ. Среднее время: 3-5 дней.</p>
-              <p>⚡ <strong>Курьерская доставка:</strong> Доступна в Москве и Санкт-Петербурге на следующий день после заказа.</p>
-              <p>💳 <strong>Оплата:</strong> Производится онлайн или при получении в пункте выдачи (с примеркой).</p>
+            <div style={{fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '16px'}}>
+              <div style={{display: 'flex', gap: '12px', alignItems: 'flex-start'}}>
+                <Truck size={20} color="var(--primary)" style={{flexShrink: 0, marginTop: '2px'}} />
+                <div><span style={{color: 'var(--text-main)', fontWeight: 600}}>Доставка СДЭК:</span><br/>Осуществляется по всей России и СНГ. Время доставки зависит от региона (3-5 дней).</div>
+              </div>
+              <div style={{display: 'flex', gap: '12px', alignItems: 'flex-start'}}>
+                <Zap size={20} color="var(--primary)" style={{flexShrink: 0, marginTop: '2px'}} />
+                <div><span style={{color: 'var(--text-main)', fontWeight: 600}}>Курьерская доставка:</span><br/>Моментальная доставка в Москве и Санкт-Петербурге на следующий день.</div>
+              </div>
+              <div style={{display: 'flex', gap: '12px', alignItems: 'flex-start'}}>
+                <CreditCard size={20} color="var(--primary)" style={{flexShrink: 0, marginTop: '2px'}} />
+                <div><span style={{color: 'var(--text-main)', fontWeight: 600}}>Оплата:</span><br/>Безопасная оплата картой онлайн или при получении в пункте выдачи после примерки.</div>
+              </div>
             </div>
             <button className="promo-btn" style={{width: '100%', marginTop: '20px'}} onClick={() => setShowDeliveryModal(false)}>
               Понятно
