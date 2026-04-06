@@ -193,7 +193,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
          <div style={{width: 44}}></div>
       </header>
 
-      <div className="categories" style={{padding: '0 0 24px 0'}}>
+      <div className="categories" style={{padding: '0 20px 24px', margin: '0 -20px'}}>
         <div className={`category-pill ${adminTab === 'orders' ? 'active' : ''}`} onClick={() => { setAdminTab('orders'); cancelEdit(); }}>
           Заказы {orders.filter(o => o.status === 'pending').length > 0 && `(${orders.filter(o => o.status === 'pending').length})`}
         </div>
@@ -482,6 +482,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                 <div 
                   className={`preview-item ${draggedIdx === idx ? 'dragged' : ''}`} 
                   key={idx} 
+                  data-index={idx}
                   draggable
                   onDragStart={(e) => {
                      setDraggedIdx(idx);
@@ -507,14 +508,37 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                     setDraggedIdx(null);
                   }}
                   onDragEnd={() => setDraggedIdx(null)}
-                  onTouchStart={() => setDraggedIdx(idx)}
+                  onTouchStart={(e) => {
+                     setDraggedIdx(idx);
+                  }}
+                  onTouchMove={(e) => {
+                    if (draggedIdx === null) return;
+                    const touch = e.touches[0];
+                    const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetDiv = targetEl?.closest('.preview-item');
+                    if (targetDiv) {
+                       const targetIdx = parseInt(targetDiv.getAttribute('data-index'), 10);
+                       if (!isNaN(targetIdx) && targetIdx !== draggedIdx) {
+                           setImages(prev => {
+                               const newArr = [...prev];
+                               const draggedItem = newArr.splice(draggedIdx, 1)[0];
+                               newArr.splice(targetIdx, 0, draggedItem);
+                               return newArr;
+                           });
+                           setDraggedIdx(targetIdx); 
+                       }
+                    }
+                  }}
+                  onTouchEnd={() => setDraggedIdx(null)}
                   style={{ 
                     position: 'relative', 
                     border: idx === 0 ? '2px solid var(--primary)' : '1px solid var(--border)', 
                     padding: idx === 0 ? '2px' : '0',
-                    opacity: draggedIdx === idx ? 0.5 : 1,
+                    opacity: draggedIdx === idx ? 0.4 : 1,
                     cursor: 'grab',
-                    touchAction: 'none'
+                    touchAction: 'none',
+                    transform: draggedIdx === idx ? 'scale(0.95)' : 'scale(1)',
+                    transition: 'transform 0.1s, opacity 0.1s'
                   }}
                 >
                   <img src={imgSrc} alt={`upload-${idx}`} style={{ borderRadius: '4px', pointerEvents: 'none' }} />
@@ -543,7 +567,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                         fontSize: '0.65rem', padding: '4px 6px', cursor: 'pointer', zIndex: 5
                       }}
                     >
-                      ★ На главную
+                      ★ Главная
                     </button>
                   )}
                 </div>

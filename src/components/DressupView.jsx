@@ -292,15 +292,15 @@ export function DressupView({ products, addToCart, showToast }) {
               boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', position: 'relative' }}>
+            <button 
+               onClick={() => setPreviewProduct(null)} 
+               style={{ position: 'absolute', top: '16px', right: '16px', background: 'var(--surface-elevated)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: 'var(--shadow-sm)' }}>
+               <X size={16} strokeWidth={2.5} color="var(--text-muted)"/>
+            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', position: 'relative', marginTop: '12px' }}>
               <div 
                id="preview-modal-img"
                style={{ width: '100%', height: '220px', flexShrink: 0, borderRadius: '16px', background: 'var(--surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-                <button 
-                  onClick={() => setPreviewProduct(null)} 
-                  style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--card-bg)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, boxShadow: 'var(--shadow-sm)' }}>
-                  <X size={16} strokeWidth={2.5} color="var(--text-muted)"/>
-                </button>
                 <img src={previewProduct.item.images?.[0] || previewProduct.item.image} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '20px' }} alt="" />
               </div>
               <div style={{ width: '100%', textAlign: 'center' }}>

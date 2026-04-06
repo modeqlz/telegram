@@ -60,6 +60,15 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
           )}
           {isVideo ? (
              <video 
+               ref={(el) => {
+                 if (el) {
+                   el.defaultMuted = true;
+                   el.muted = isMuted;
+                   el.setAttribute('playsinline', '');
+                   el.setAttribute('webkit-playsinline', '');
+                   el.setAttribute('muted', '');
+                 }
+               }}
                src={banner.image} 
                onLoadedData={(e) => { 
                  setMediaLoaded(true); 
@@ -67,8 +76,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
                }} 
                autoPlay 
                loop 
-               muted={isMuted} 
-               defaultMuted 
                playsInline 
                controls={false} 
                disablePictureInPicture 
@@ -119,6 +126,15 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
                 {isVideo ? (
                   <>
                     <video 
+                      ref={(el) => {
+                        if (el) {
+                          el.defaultMuted = true;
+                          el.muted = isMuted;
+                          el.setAttribute('playsinline', '');
+                          el.setAttribute('webkit-playsinline', '');
+                          el.setAttribute('muted', '');
+                        }
+                      }}
                       src={banner.image} 
                       onLoadedData={(e) => { 
                         setMediaLoaded(true); 
@@ -126,8 +142,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
                       }} 
                       autoPlay 
                       loop 
-                      muted={isMuted} 
-                      defaultMuted 
                       playsInline 
                       controls={false} 
                       disablePictureInPicture 

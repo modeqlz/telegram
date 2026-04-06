@@ -40,7 +40,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
         <div className="app-logo" style={{fontSize: '1.2rem'}}>Профиль</div>
       </header>
 
-      <div style={{padding: '30px 20px 100px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1}}>
+      <div style={{padding: '30px 20px 140px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1}}>
         {tgUser ? (
           <>
             {tgUser.photo_url ? (
@@ -57,7 +57,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
             <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <div>
                 <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>Мой баланс</div>
-                <div style={{fontSize: '1.5rem', fontWeight: 700}}>{dbUser?.balance || 0} ₽</div>
+                <div style={{fontSize: '1.5rem', fontWeight: 700}}>{Number(dbUser?.balance || 0).toLocaleString('de-DE')} ₽</div>
               </div>
               <button 
                 className="btn-primary" 
@@ -144,7 +144,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
 
 
             {isAdmin && (
-              <button style={{background: 'var(--surface-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px', marginTop: '0', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)'}} onClick={openAdmin}>
+              <button style={{background: 'var(--surface-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px', marginTop: '0', marginBottom: '40px', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)'}} onClick={openAdmin}>
                 <Edit2 size={18} /> Панель управления (Админ)
               </button>
             )}

@@ -14,7 +14,7 @@ export function DetailsView({ product, goBack, favorites, toggleFavorite, addToC
 
   return (
     <div className="details-page page-transition">
-      <header className="header">
+      <header className="header" style={{ marginBottom: '16px' }}>
         <button className="icon-btn" onClick={goBack}><ArrowLeft size={20} /></button>
         <div className="app-logo" style={{fontSize: '1.1rem'}}>О товаре</div>
         <button 
