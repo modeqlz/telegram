@@ -503,6 +503,11 @@ function FavoritesView({ products, openDetails, favorites, toggleFavorite, activ
 function HomeView({ products, openDetails, activeCategory, setActiveCategory, favorites, toggleFavorite, activeNav, handleNavClick, banner, cartCount }) {
   const [isMuted, setIsMuted] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+
+  useEffect(() => {
+    setMediaLoaded(false);
+  }, [banner?.image]);
 
   let displayedProducts = activeCategory === "Все" 
     ? products 
@@ -548,10 +553,13 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
             }
           }
         }}>
+          {!mediaLoaded && (
+             <div className="skeleton-loader" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }} />
+          )}
           {isVideo ? (
-             <video src={banner.image} autoPlay loop muted={isMuted} playsInline className="promo-image-standalone" style={{pointerEvents: 'auto'}} />
+             <video src={banner.image} onLoadedData={() => setMediaLoaded(true)} autoPlay loop muted={isMuted} playsInline controls={false} disablePictureInPicture preload="auto" className="promo-image-standalone" style={{pointerEvents: 'none', opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
           ) : (
-             <img src={banner.image} alt="Promo" className="promo-image-standalone" />
+             <img src={banner.image} onLoad={() => setMediaLoaded(true)} alt="Promo" className="promo-image-standalone" style={{opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
           )}
 
           {isVideo && (
@@ -586,25 +594,32 @@ function HomeView({ products, openDetails, activeCategory, setActiveCategory, fa
           )}
           
           {banner.image ? (
-              isVideo ? (
-                <>
-                  <video src={banner.image} autoPlay loop muted={isMuted} playsInline className="promo-image" style={{pointerEvents: 'auto'}} />
-                  <button 
-                     onClick={(e) => { e.preventDefault(); setIsMuted(!isMuted); }}
-                     style={{ 
-                        position: 'absolute', right: '12px', bottom: '12px', 
-                        background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', 
-                        borderRadius: '50%', width: '32px', height: '32px', 
-                        display: 'flex', justifyContent: 'center', alignItems: 'center', 
-                        cursor: 'pointer', zIndex: 10, backdropFilter: 'blur(4px)' 
-                     }}
-                  >
-                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  </button>
-                </>
-              ) : (
-                <img src={banner.image} alt="" className="promo-image" />
-              )
+              <>
+                {!mediaLoaded && (
+                   <div className="skeleton-loader" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, borderRadius: 'inherit' }} />
+                )}
+                {isVideo ? (
+                  <>
+                    <video src={banner.image} onLoadedData={() => setMediaLoaded(true)} autoPlay loop muted={isMuted} playsInline controls={false} disablePictureInPicture preload="auto" className="promo-image" style={{pointerEvents: 'none', opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
+                    {mediaLoaded && (
+                      <button 
+                         onClick={(e) => { e.preventDefault(); setIsMuted(!isMuted); }}
+                         style={{ 
+                            position: 'absolute', right: '12px', bottom: '12px', 
+                            background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', 
+                            borderRadius: '50%', width: '32px', height: '32px', 
+                            display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                            cursor: 'pointer', zIndex: 10, backdropFilter: 'blur(4px)' 
+                         }}
+                      >
+                        {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <img src={banner.image} onLoad={() => setMediaLoaded(true)} alt="" className="promo-image" style={{opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
+                )}
+              </>
           ) : (
               <div style={{
                 position: 'absolute', right: '-10%', bottom: '-20%', width: '150px', height: '150px', 
@@ -1106,7 +1121,7 @@ function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack,
                 <div style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600}}>Предпросмотр (как выглядит на главной):</div>
                 <div className="promo-banner-standalone" style={{ minHeight: '180px', pointerEvents: 'none', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', background: 'black' }}>
                     {banner.isVideo || banner.image.startsWith('data:video') ? (
-                       <video src={banner.image} autoPlay loop muted playsInline className="promo-image-standalone" style={{objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0}} />
+                       <video src={banner.image} autoPlay loop muted playsInline controls={false} disablePictureInPicture preload="auto" className="promo-image-standalone" style={{objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none'}} />
                     ) : (
                        <img src={banner.image} alt="Promo" className="promo-image-standalone" style={{objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0}} />
                     )}

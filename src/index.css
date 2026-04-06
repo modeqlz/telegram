@@ -239,6 +239,25 @@ body {
   left: 0;
 }
 
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-color: var(--surface-elevated); }
+  50% { background-color: #333; }
+  100% { background-color: var(--surface-elevated); }
+}
+
+.skeleton-loader {
+  animation: skeleton-shimmer 1.5s infinite ease-in-out;
+}
+
 /* Categories */
 .categories {
   display: flex;
