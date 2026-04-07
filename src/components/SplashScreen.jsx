@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
 export function SplashScreen({ onFinish, userName }) {
-  const [phase, setPhase] = useState('enter'); // enter -> hold -> exit
+  const [phase, setPhase] = useState('hold'); // hold -> exit
 
   useEffect(() => {
-    const holdTimer = setTimeout(() => setPhase('hold'), 100);
-    const exitTimer = setTimeout(() => setPhase('exit'), 2200);
-    const doneTimer = setTimeout(() => onFinish(), 2800);
+    const exitTimer = setTimeout(() => setPhase('exit'), 2300);
+    const doneTimer = setTimeout(() => onFinish(), 2900);
 
     return () => {
-      clearTimeout(holdTimer);
       clearTimeout(exitTimer);
       clearTimeout(doneTimer);
     };
