@@ -113,7 +113,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     setAdminTab('add_product');
     setEditingId(product.id);
     setName(product.name);
-    setPrice(product.price.toString());
+    setPrice(product.price ? product.price.toString() : '');
     setCategory(product.category);
     setDescription(product.description || "");
     setSizesRaw(product.sizes ? product.sizes.join(', ') : "");
@@ -561,7 +561,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             <label className="form-label">Цена (₽)</label>
             <input 
               type="text" 
-              inputMode="decimal"
               className="form-input" 
               value={price} 
               onChange={e => setPrice(e.target.value)} 
