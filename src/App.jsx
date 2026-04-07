@@ -142,7 +142,7 @@ function App() {
 
   const [view, setView] = useState('home'); 
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [activeCategory, setActiveCategory] = useState("Худи");
+  const [activeCategory, setActiveCategory] = useState("Все");
   const [activeNav, setActiveNav] = useState("home");
   const [favorites, setFavorites] = useState([]);
   const [toast, setToast] = useState(null);

@@ -169,7 +169,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     const payload = {
       brand: "DVK Shop",
       name,
-      price: parseFloat(price.toString().replace(',', '.')),
+      price: parseFloat(price.toString().replace(/\./g, '').replace(',', '.')),
       description,
       category,
       sizes,
