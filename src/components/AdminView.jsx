@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronRight, ChevronLeft, User, Package, UploadCloud, Edit2, Trash2, X, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../constants';
@@ -7,7 +7,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
   const [editingId, setEditingId] = useState(null);
   const [orders, setOrders] = useState([]);
   const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
+  const priceRef = useRef(null);
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
   const [sizesRaw, setSizesRaw] = useState('');
@@ -113,7 +113,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     setAdminTab('add_product');
     setEditingId(product.id);
     setName(product.name);
-    setPrice(product.price ? product.price.toString() : '');
+    if (priceRef.current) priceRef.current.value = product.price ? product.price.toString() : '';
     setCategory(product.category);
     setDescription(product.description || "");
     setSizesRaw(product.sizes ? product.sizes.join(', ') : "");
@@ -123,7 +123,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
   const cancelEdit = () => {
     setEditingId(null);
     setName('');
-    setPrice('');
+    if (priceRef.current) priceRef.current.value = '';
     setCategory(CATEGORIES[0]);
     setDescription('');
     setSizesRaw('');
@@ -132,19 +132,28 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
   const handleSubmit = (e) => {
     e.preventDefault();
     const sizes = sizesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    if (!name || !price || images.length === 0) {
+    const priceVal = priceRef.current ? priceRef.current.value.trim() : '';
+    if (!name || !priceVal || images.length === 0) {
       alert("Пожалуйста, заполните Имя, Цену и загрузите хотя бы 1 фото!");
       return;
     }
-    let parsedPrice = price;
-    if (typeof price === 'string') {
-      let cleaned = price.replace(/\s/g, '');
+    let parsedPrice = priceVal;
+    if (typeof parsedPrice === 'string') {
+      let cleaned = parsedPrice.replace(/\s/g, '');
       if (cleaned.includes('.') && cleaned.includes(',')) {
-        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+        const dotPos = cleaned.lastIndexOf('.');
+        const commaPos = cleaned.lastIndexOf(',');
+        if (commaPos > dotPos) {
+          cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+        } else {
+          cleaned = cleaned.replace(/,/g, '').replace('.', '.');
+        }
       } else if ((cleaned.match(/\./g) || []).length > 1) {
         cleaned = cleaned.replace(/\./g, '');
-      } else if (/^\d+\.\d{3}$/.test(cleaned)) {
-        cleaned = cleaned.replace('.', '');
+      } else if ((cleaned.match(/,/g) || []).length > 1) {
+        cleaned = cleaned.replace(/,/g, '');
+      } else if (/^\d+[.,]\d{3}$/.test(cleaned)) {
+        cleaned = cleaned.replace(/[.,]/g, '');
       } else {
         cleaned = cleaned.replace(',', '.');
       }
@@ -562,8 +571,11 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             <input 
               type="text" 
               className="form-input" 
-              value={price} 
-              onChange={e => setPrice(e.target.value)} 
+              ref={priceRef}
+              defaultValue=""
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder="Пример: 24890"
               required
             />
