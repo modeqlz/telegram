@@ -193,7 +193,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
          <div style={{width: 44}}></div>
       </header>
 
-      <div className="categories" style={{padding: '0 20px 24px', margin: '0 -20px', width: 'auto', display: 'flex', overflowX: 'auto', WebkitOverflowScrolling: 'touch'}}>
+      <div className="categories" style={{padding: '0 20px 24px', margin: '0 -20px', width: 'calc(100% + 40px)', display: 'flex', overflowX: 'auto', WebkitOverflowScrolling: 'touch'}}>
         <div className={`category-pill ${adminTab === 'orders' ? 'active' : ''}`} onClick={() => { setAdminTab('orders'); cancelEdit(); }}>
           Заказы {orders.filter(o => o.status === 'pending').length > 0 && `(${orders.filter(o => o.status === 'pending').length})`}
         </div>
