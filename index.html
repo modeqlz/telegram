@@ -7,7 +7,37 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <title>telegram</title>
   </head>
+  <style>
+    body, html { margin: 0; padding: 0; background: #0A0A0A; height: 100vh; overflow: hidden; }
+    #initial-splash {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0A0A0A; z-index: 999999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-family: 'Inter', sans-serif;
+    }
+    #initial-splash .splash-logo {
+      font-size: 3.5rem; font-weight: 800; letter-spacing: -0.04em; color: #FFFFFF; line-height: 1;
+    }
+    #initial-splash .splash-shop {
+      font-size: 1.4rem; font-weight: 500; letter-spacing: 0.35em; text-transform: uppercase; color: #E60000;
+      margin-top: 4px;
+    }
+    #initial-splash .splash-line {
+      width: 60px; height: 2px; background: linear-gradient(90deg, transparent, #E60000, transparent); margin: 16px 0;
+    }
+    #initial-splash .splash-footer {
+      position: absolute; bottom: 60px; font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888888; opacity: 0.4;
+    }
+  </style>
   <body>
+    <div id="initial-splash">
+      <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+        <div class="splash-logo">DVK</div>
+        <div class="splash-shop">Shop</div>
+        <div class="splash-line"></div>
+      </div>
+      <div class="splash-footer">Premium Fashion Store</div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
