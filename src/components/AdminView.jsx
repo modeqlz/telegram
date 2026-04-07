@@ -136,10 +136,25 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
       alert("Пожалуйста, заполните Имя, Цену и загрузите хотя бы 1 фото!");
       return;
     }
+    let parsedPrice = price;
+    if (typeof price === 'string') {
+      let cleaned = price.replace(/\s/g, '');
+      if (cleaned.includes('.') && cleaned.includes(',')) {
+        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+      } else if ((cleaned.match(/\./g) || []).length > 1) {
+        cleaned = cleaned.replace(/\./g, '');
+      } else if (/^\d+\.\d{3}$/.test(cleaned)) {
+        cleaned = cleaned.replace('.', '');
+      } else {
+        cleaned = cleaned.replace(',', '.');
+      }
+      parsedPrice = parseFloat(cleaned) || 0;
+    }
+
     const payload = {
       brand: "DVK Shop",
       name,
-      price: parseFloat(price.toString().replace(/\s/g, '').replace(',', '.')),
+      price: parsedPrice,
       description,
       category,
       sizes,
