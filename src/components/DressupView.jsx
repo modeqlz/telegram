@@ -146,7 +146,7 @@ export function DressupView({ products, addToCart, showToast }) {
   const tops = products.filter(p => ["Худи", "Куртки", "Футболки"].includes(p.category));
   const bottoms = products.filter(p => ["Джинсы", "Брюки", "Шорты"].includes(p.category));
   const shoes = products.filter(p => ["Обувь"].includes(p.category));
-  const accessories = products.filter(p => ["Аксессуары"].includes(p.category));
+  const accessories = products.filter(p => ["Аксессуары", "Сумки", "Портмоне", "Ремни", "Очки"].includes(p.category));
   const [selectedTop, setSelectedTop] = useState(null);
   const [selectedBottom, setSelectedBottom] = useState(null);
   const [selectedShoe, setSelectedShoe] = useState(null);
@@ -244,6 +244,10 @@ export function DressupView({ products, addToCart, showToast }) {
         subtitle="ACCESSORIES"
         subcategories={[
           { key: 'Все', label: 'Все' },
+          { key: 'Сумки', label: 'Сумки' },
+          { key: 'Портмоне', label: 'Портмоне' },
+          { key: 'Ремни', label: 'Ремни' },
+          { key: 'Очки', label: 'Очки' },
         ]}
         allItems={accessories}
         selected={selectedAccessory}

@@ -1226,7 +1226,7 @@ body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 4px calc(50% - 45px);
+  padding: 4px calc(50% - 30px);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
   mask-image: linear-gradient(90deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
 }
