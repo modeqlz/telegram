@@ -432,7 +432,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             {banner.image && (
               <div style={{marginTop: '20px'}}>
                 <div style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600}}>Предпросмотр (как выглядит на главной):</div>
-                <div className="promo-banner-standalone" style={{ minHeight: '180px', pointerEvents: 'none', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', background: 'black' }}>
+                <div className="promo-banner-standalone" style={{ minHeight: '180px', pointerEvents: 'none', position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', background: 'black', margin: 0 }}>
                     {banner.isVideo || banner.image.startsWith('data:video') ? (
                        <video src={banner.image} autoPlay loop muted playsInline controls={false} disablePictureInPicture preload="auto" className="promo-image-standalone" style={{objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none'}} />
                     ) : (
