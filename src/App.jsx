@@ -16,6 +16,7 @@ import { DetailsView } from './components/DetailsView';
 import { AdminView } from './components/AdminView';
 import { ProfileView } from './components/ProfileView';
 import { DressupView } from './components/DressupView';
+import { SplashScreen } from './components/SplashScreen';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -146,6 +147,7 @@ function App() {
   const [activeNav, setActiveNav] = useState("home");
   const [favorites, setFavorites] = useState([]);
   const [toast, setToast] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
 
   const showToast = (message) => {
     if (window.navigator && window.navigator.vibrate) {
@@ -327,6 +329,12 @@ function App() {
       </div>
       {view !== 'details' && view !== 'admin' && (
         <BottomNav activeNav={activeNav} handleNavClick={handleNavClick} cartCount={cartCount} tgUser={tgUser}/>
+      )}
+      {showSplash && (
+        <SplashScreen 
+          userName={tgUser?.first_name} 
+          onFinish={() => setShowSplash(false)} 
+        />
       )}
     </div>
   );

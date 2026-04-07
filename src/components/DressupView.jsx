@@ -273,7 +273,7 @@ export function DressupView({ products, addToCart, showToast }) {
         emptyText="Добавьте обувь в админке"
       />
 
-      <div style={{ paddingBottom: '120px' }}></div>
+
     </div>
       
       {/* Product Preview Bottom Sheet */}
