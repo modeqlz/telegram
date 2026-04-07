@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { User, Package, ChevronRight, Info, HelpCircle, Edit2, X, Truck, Zap, CreditCard } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-
 export function ProfileView({ tgUser, isAdmin, openAdmin }) {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
   const [dbUser, setDbUser] = useState(null);
-
   const statusLabels = { pending: '\u041e\u0436\u0438\u0434\u0430\u0435\u0442', confirmed: '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043d', shipped: '\u041e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d', delivered: '\u0414\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d', cancelled: '\u041e\u0442\u043c\u0435\u043d\u0451\u043d' };
   const statusColors = { pending: '#f59e0b', confirmed: '#3b82f6', shipped: '#8b5cf6', delivered: '#22c55e', cancelled: '#ef4444' };
-
   useEffect(() => {
     if (!tgUser) return;
     const fetchMyOrders = async () => {
@@ -31,15 +28,12 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
     fetchMyOrders();
     fetchDbUser();
   }, [tgUser]);
-
   const activeOrders = myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
-  
   return (
     <div className="profile-page page-transition" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
       <header className="header" style={{position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 10, justifyContent: 'center'}}>
         <div className="app-logo" style={{fontSize: '1.2rem'}}>Профиль</div>
       </header>
-
       <div style={{padding: '30px 20px 140px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1}}>
         {tgUser ? (
           <>
@@ -52,8 +46,6 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
             )}
             <h2 style={{fontSize: '1.4rem', marginBottom: '4px', textAlign: 'center'}}>{tgUser.first_name} {tgUser.last_name}</h2>
             {tgUser.username && <div style={{color: 'var(--text-muted)', marginBottom: '16px'}}>@{tgUser.username}</div>}
-            
-            {/* Баланс */}
             <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <div>
                 <div style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>Мой баланс</div>
@@ -63,7 +55,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
                 className="btn-primary" 
                 style={{padding: '8px 16px', fontSize: '0.9rem', borderRadius: 'var(--radius-full)', margin: 0, width: 'auto'}}
                 onClick={() => {
-                  const url = `https://t.me/DvkShopSupportBot`; // Заглушка
+                  const url = `https://t.me/DvkShopSupportBot`;
                   if (window.Telegram && window.Telegram.WebApp) {
                     window.Telegram.WebApp.openTelegramLink(url);
                   } else {
@@ -74,8 +66,6 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
                 Пополнить
               </button>
             </div>
-
-            {/* Orders block - dynamic */}
             <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)'}}>
               <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '1.1rem'}}>
@@ -110,8 +100,6 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
                 </div>
               )}
             </div>
-
-            {/* Меню информации */}
             <div style={{width: '100%', maxWidth: '340px', background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '24px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border)'}}>
               <div 
                 style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)', cursor: 'pointer', background: 'transparent'}}
@@ -126,7 +114,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
               <div 
                 style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer', background: 'transparent'}}
                 onClick={() => {
-                  const url = `https://t.me/DvkShopSupportBot`; // Заглушка
+                  const url = `https://t.me/DvkShopSupportBot`;
                   if (window.Telegram && window.Telegram.WebApp) {
                     window.Telegram.WebApp.openTelegramLink(url);
                   } else {
@@ -141,8 +129,6 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
                 <ChevronRight size={20} color="var(--text-muted)" />
               </div>
             </div>
-
-
             {isAdmin && (
               <button style={{background: 'var(--surface-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px', marginTop: '0', marginBottom: '40px', width: '100%', maxWidth: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)'}} onClick={openAdmin}>
                 <Edit2 size={18} /> Панель управления (Админ)
@@ -156,8 +142,6 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
           </div>
         )}
       </div>
-
-      {/* Модальное окно "Условия доставки" */}
       {showDeliveryModal && (
         <div style={{position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(10px)'}}>
           <div style={{background: 'var(--card-bg)', width: '100%', maxWidth: '360px', borderRadius: 'var(--radius-lg)', padding: '24px', position: 'relative', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)'}}>

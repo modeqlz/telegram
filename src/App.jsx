@@ -6,7 +6,6 @@ import {
   Truck, Zap, CreditCard
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
-
 import { CATEGORIES, ADMIN_IDS } from './constants';
 import { BottomNav } from './components/BottomNav';
 import { CartView } from './components/CartView';
@@ -17,24 +16,19 @@ import { AdminView } from './components/AdminView';
 import { ProfileView } from './components/ProfileView';
 import { DressupView } from './components/DressupView';
 import { SplashScreen } from './components/SplashScreen';
-
 function App() {
   const [products, setProducts] = useState([]);
   const [tgUser, setTgUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
   useEffect(() => {
-    // If running in Telegram Web App, force expand to fix viewport bug where 100vh gets truncated
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.expand();
       if (window.Telegram.WebApp.disableVerticalSwipes) {
-        window.Telegram.WebApp.disableVerticalSwipes(); // Blocks swiping down to close the app natively
+        window.Telegram.WebApp.disableVerticalSwipes();
       }
       if (window.Telegram.WebApp.initDataUnsafe?.user) {
         const user = window.Telegram.WebApp.initDataUnsafe.user;
         setTgUser(user);
-        
-        // Sync user with Supabase and check admin rights
         const syncUser = async () => {
           try {
             await supabase.from('users').upsert({
@@ -45,7 +39,6 @@ function App() {
               photo_url: user.photo_url || '',
               last_visit: new Date().toISOString()
             }, { onConflict: 'telegram_id' });
-            
             const { data } = await supabase.from('users').select('is_admin').eq('telegram_id', user.id).single();
             if ((data && data.is_admin) || ADMIN_IDS.includes(user.id)) {
               setIsAdmin(true);
@@ -59,13 +52,11 @@ function App() {
       }
       window.Telegram.WebApp.ready();
     }
-
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
-      
       if (error) {
         console.error("Error fetching products:", error);
       } else {
@@ -74,11 +65,8 @@ function App() {
     };
     fetchProducts();
   }, []);
-
   const [banner, setBanner] = useState({ title: "", buttonText: "", image: "", isVideo: false, link: "" });
   const [bannerId, setBannerId] = useState(null);
-
-  // Load banner from Supabase on mount
   useEffect(() => {
     const fetchBanner = async () => {
       const { data, error } = await supabase
@@ -86,7 +74,6 @@ function App() {
         .select('*')
         .limit(1)
         .single();
-      
       if (!error && data) {
         setBannerId(data.id);
         setBanner({
@@ -100,8 +87,6 @@ function App() {
     };
     fetchBanner();
   }, []);
-
-  // Save banner to Supabase when it changes (debounced)
   useEffect(() => {
     if (!bannerId) return;
     const timeout = setTimeout(async () => {
@@ -116,10 +101,9 @@ function App() {
           updated_at: new Date().toISOString()
         })
         .eq('id', bannerId);
-    }, 1000); // 1s debounce
+    }, 1000);
     return () => clearTimeout(timeout);
   }, [banner, bannerId]);
-
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('redwear_cart_items');
@@ -128,7 +112,6 @@ function App() {
       return [];
     }
   });
-
   useEffect(() => {
     try {
       localStorage.setItem('redwear_cart_items', JSON.stringify(cartItems));
@@ -136,11 +119,7 @@ function App() {
       console.warn("Storage Quota Exceeded");
     }
   }, [cartItems]);
-
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
-
-  // Removed old cart localstorage effect
-
   const [view, setView] = useState('home'); 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeCategory, setActiveCategory] = useState("Все");
@@ -148,15 +127,13 @@ function App() {
   const [favorites, setFavorites] = useState([]);
   const [toast, setToast] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
-
   const showToast = (message) => {
     if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(50); // Light haptic feedback
+      window.navigator.vibrate(50);
     }
     setToast(message);
     setTimeout(() => setToast(null), 3000);
   };
-
   const toggleFavorite = (e, id) => {
     e.stopPropagation();
     if (favorites.includes(id)) {
@@ -166,24 +143,20 @@ function App() {
       showToast('Добавлено в избранное');
     }
   };
-
   const openDetails = (product) => {
     setSelectedProduct(product);
     setView('details');
     window.scrollTo(0, 0);
   };
-
   const goBack = () => {
     setView('home');
     setActiveNav('home');
   };
-
   const addProduct = async (newProduct) => {
     const { data, error } = await supabase
       .from('products')
       .insert([newProduct])
       .select();
-
     if (error) {
       showToast('Ошибка при добавлении в БД: ' + error.message);
     } else if (data && data.length > 0) {
@@ -191,14 +164,12 @@ function App() {
       showToast('Товар успешно добавлен!');
     }
   };
-
   const updateProduct = async (updatedProduct) => {
     const { data, error } = await supabase
       .from('products')
       .update(updatedProduct)
       .eq('id', updatedProduct.id)
       .select();
-
     if (error) {
       showToast('Ошибка при обновлении: ' + error.message);
     } else if (data && data.length > 0) {
@@ -206,14 +177,12 @@ function App() {
       showToast('Изменения сохранены!');
     }
   };
-
   const deleteProduct = async (id) => {
     if (window.confirm("Удалить это объявление навсегда?")) {
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
-        
       if (error) {
         showToast('Ошибка при удалении: ' + error.message);
       } else {
@@ -222,7 +191,6 @@ function App() {
       }
     }
   };
-
   const handleNavClick = (navItem) => {
     setActiveNav(navItem);
     if (navItem === 'profile') {
@@ -237,7 +205,6 @@ function App() {
       setView('home');
     }
   };
-
   const addToCart = (product, qty = 1, size = null, silent = false) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id && item.selectedSize === size);
@@ -248,7 +215,6 @@ function App() {
     });
     if (!silent) showToast(`В корзину добавлено ${qty} шт.`);
   };
-
   return (
     <div className="app-container">
       {toast && (
@@ -339,8 +305,4 @@ function App() {
     </div>
   );
 }
-
-
-
-
 export default App;

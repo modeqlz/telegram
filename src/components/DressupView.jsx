@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
-
 function FlyingItem({ item, onComplete }) {
   const animId = useRef('fly_' + Math.random().toString(36).slice(2, 8));
   const [animating, setAnimating] = useState(false);
-
   useEffect(() => {
     const summaryEl = document.querySelector('.outfit-summary');
     let destX, destY;
-
     if (summaryEl) {
       const summaryRect = summaryEl.getBoundingClientRect();
       destX = summaryRect.left + 40 - (item.startX + item.width / 2);
@@ -17,10 +14,8 @@ function FlyingItem({ item, onComplete }) {
       destX = (window.innerWidth / 2) - (item.startX + item.width / 2);
       destY = window.innerHeight - 120 - (item.startY + item.height / 2);
     }
-
     const midX = destX * 0.4;
     const midY = destY * 0.3 - 40;
-
     const keyframes = `
       @keyframes ${animId.current} {
         0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
@@ -31,17 +26,14 @@ function FlyingItem({ item, onComplete }) {
     const styleSheet = document.createElement('style');
     styleSheet.textContent = keyframes;
     document.head.appendChild(styleSheet);
-
     const startTimer = setTimeout(() => setAnimating(true), 30);
     const timer = setTimeout(() => onComplete(item.id), 480);
-
     return () => {
       clearTimeout(startTimer);
       clearTimeout(timer);
       document.head.removeChild(styleSheet);
     };
   }, [item, onComplete]);
-
   return (
     <img
       src={item.img}
@@ -61,18 +53,13 @@ function FlyingItem({ item, onComplete }) {
     />
   );
 }
-
 function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emptyText }) {
   const scrollRef = useRef(null);
   const subcatScrollRef = useRef(null);
   const [activeSub, setActiveSub] = useState('Все');
-
-  // No more filteredItems variable needed, handling via CSS
-
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -86,17 +73,13 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
       rootMargin: '0px -38% 0px -38%',
       threshold: 0
     });
-
     const children = container.querySelectorAll('.dressup-item');
     children.forEach(c => observer.observe(c));
-
     return () => observer.disconnect();
   }, [allItems]);
-
   useEffect(() => {
     const container = subcatScrollRef.current;
     if (!container) return;
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -108,19 +91,14 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
       });
     }, {
       root: container,
-      rootMargin: '0px -49% 0px -49%', // Exact center only
+      rootMargin: '0px -49% 0px -49%',
       threshold: 0
     });
-
     const children = container.querySelectorAll('.dressup-subcat');
     children.forEach(c => observer.observe(c));
-
     return () => observer.disconnect();
   }, [subcategories]);
-
-  // Get the active subcategory label for header
   const activeLabel = activeSub === 'Все' ? subcategories[0].label : subcategories.find(s => s.key === activeSub)?.label || subcategories[0].label;
-
   return (
     <div className="dressup-row-wrap">
       <div className="dressup-row-header">
@@ -164,27 +142,24 @@ function DressupRow({ subtitle, subcategories, allItems, selected, onSelect, emp
     </div>
   );
 }
-
 export function DressupView({ products, addToCart, showToast }) {
   const tops = products.filter(p => ["Худи", "Куртки", "Футболки"].includes(p.category));
   const bottoms = products.filter(p => ["Джинсы", "Брюки", "Шорты"].includes(p.category));
   const shoes = products.filter(p => ["Обувь"].includes(p.category));
   const accessories = products.filter(p => ["Аксессуары"].includes(p.category));
-
   const [selectedTop, setSelectedTop] = useState(null);
   const [selectedBottom, setSelectedBottom] = useState(null);
   const [selectedShoe, setSelectedShoe] = useState(null);
+  const [selectedAccessory, setSelectedAccessory] = useState(null);
   const [flyingItems, setFlyingItems] = useState([]);
   const [previewProduct, setPreviewProduct] = useState(null);
   const [descExpanded, setDescExpanded] = useState(false);
-
   const handleSelect = (e, item, setter, slotIndex) => {
     const imgEl = e.currentTarget.querySelector('img');
     if (imgEl) {
       const rect = imgEl.getBoundingClientRect();
       const hash = String(item.id).split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
       const rot = (Math.abs(hash) % 24) - 12;
-      
       setFlyingItems(prev => [...prev, {
         id: Date.now() + Math.random(),
         rot,
@@ -200,36 +175,32 @@ export function DressupView({ products, addToCart, showToast }) {
       setter(item);
     }
   };
-
-  const selectedItems = [selectedTop, selectedBottom, selectedShoe].filter(Boolean);
+  const selectedItems = [selectedTop, selectedBottom, selectedShoe, selectedAccessory].filter(Boolean);
   const outfitTotal = selectedItems.reduce((sum, item) => sum + Number(item.price), 0);
   const itemCount = selectedItems.length;
-
   const handleBuyOutfit = () => {
     let count = 0;
     const defaultSize = (p) => p.sizes && p.sizes.length > 0 ? p.sizes[0] : null;
-    
     if (selectedTop) { addToCart(selectedTop, 1, defaultSize(selectedTop), true); count++; }
     if (selectedBottom) { addToCart(selectedBottom, 1, defaultSize(selectedBottom), true); count++; }
     if (selectedShoe) { addToCart(selectedShoe, 1, defaultSize(selectedShoe), true); count++; }
-    
+    if (selectedAccessory) { addToCart(selectedAccessory, 1, defaultSize(selectedAccessory), true); count++; }
     if (count > 0) {
       showToast(`Весь образ (${count} вещи) добавлен в корзину!`);
       setSelectedTop(null);
       setSelectedBottom(null);
       setSelectedShoe(null);
+      setSelectedAccessory(null);
     } else {
       showToast('Сначала выберите крутые вещи!');
     }
   };
-
   return (
     <>
     <div className="dressup-view page-transition">
       <div className="dressup-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 20px', marginBottom: '12px' }}>
         <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Dressup</h2>
       </div>
-
       <DressupRow
         subtitle="TOPS"
         subcategories={[
@@ -243,9 +214,7 @@ export function DressupView({ products, addToCart, showToast }) {
         onSelect={(e, p) => handleSelect(e, p, setSelectedTop, 0)}
         emptyText="Добавьте верх в админке"
       />
-
       <div className="dressup-divider" />
-
       <DressupRow
         subtitle="PANTS"
         subcategories={[
@@ -259,9 +228,7 @@ export function DressupView({ products, addToCart, showToast }) {
         onSelect={(e, p) => handleSelect(e, p, setSelectedBottom, selectedTop ? 1 : 0)}
         emptyText="Добавьте низ в админке"
       />
-
       <div className="dressup-divider" />
-
       <DressupRow
         subtitle="SHOES"
         subcategories={[
@@ -272,11 +239,18 @@ export function DressupView({ products, addToCart, showToast }) {
         onSelect={(e, p) => handleSelect(e, p, setSelectedShoe, (selectedTop ? 1 : 0) + (selectedBottom ? 1 : 0))}
         emptyText="Добавьте обувь в админке"
       />
-
-
+      <div className="dressup-divider" />
+      <DressupRow
+        subtitle="ACCESSORIES"
+        subcategories={[
+          { key: 'Все', label: 'Все' },
+        ]}
+        allItems={accessories}
+        selected={selectedAccessory}
+        onSelect={(e, p) => handleSelect(e, p, setSelectedAccessory, (selectedTop ? 1 : 0) + (selectedBottom ? 1 : 0) + (selectedShoe ? 1 : 0))}
+        emptyText="Добавьте аксессуары в админке"
+      />
     </div>
-      
-      {/* Product Preview Bottom Sheet */}
       {previewProduct && (
         <>
           <div 
@@ -320,7 +294,6 @@ export function DressupView({ products, addToCart, showToast }) {
                 </div>
               </div>
             </div>
-
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -340,8 +313,6 @@ export function DressupView({ products, addToCart, showToast }) {
           </div>
         </>
       )}
-      
-      {/* Flying transition objects */}
       {flyingItems.map(item => (
         <FlyingItem 
           key={item.id} 
@@ -352,8 +323,6 @@ export function DressupView({ products, addToCart, showToast }) {
           }} 
         />
       ))}
-
-      {/* Outfit Summary Bar */}
       {itemCount > 0 && (
         <div className="outfit-summary">
           <div className="outfit-avatars">

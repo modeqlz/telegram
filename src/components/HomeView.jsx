@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Search, VolumeX, Volume2, Heart } from 'lucide-react';
 import { CATEGORIES } from '../constants';
-
 export function HomeView({ products, openDetails, activeCategory, setActiveCategory, favorites, toggleFavorite, activeNav, handleNavClick, banner, cartCount }) {
   const [isMuted, setIsMuted] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [mediaLoaded, setMediaLoaded] = useState(false);
-
   useEffect(() => {
     setMediaLoaded(false);
   }, [banner?.image]);
-
   let displayedProducts = activeCategory === "Все" 
     ? products 
     : products.filter(p => p.category === activeCategory);
-
   if (searchQuery.trim() !== "") {
     const query = searchQuery.toLowerCase();
     displayedProducts = displayedProducts.filter(p => 
@@ -22,9 +18,7 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
       (p.brand && p.brand.toLowerCase().includes(query))
     );
   }
-
   const isVideo = banner && (banner.isVideo || (banner.image && banner.image.startsWith('data:video')));
-
   return (
     <>
       <header className="header" style={{ justifyContent: 'center', paddingBottom: '10px' }}>
@@ -32,7 +26,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
           DVK Shop
         </div>
       </header>
-
       <div className="search-section">
         <div className="search-input-wrap" style={{flex: 1}}>
           <Search className="search-icon" size={20} />
@@ -45,7 +38,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
           />
         </div>
       </div>
-
       {((!banner.title || banner.title.trim() === "") && (!banner.buttonText || banner.buttonText.trim() === "") && banner.image) ? (
         <div className="promo-banner-standalone" style={{ position: 'relative', cursor: banner.link ? 'pointer' : 'default' }} onClick={(e) => {
           if (e.target.tagName.toLowerCase() !== 'button' && e.target.closest('button') == null) {
@@ -86,7 +78,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
           ) : (
              <img src={banner.image} onLoad={() => setMediaLoaded(true)} alt="Promo" className="promo-image-standalone" style={{opacity: mediaLoaded ? 1 : 0, transition: 'opacity 0.3s'}} />
           )}
-
           {isVideo && (
              <button 
                 onClick={(e) => { e.preventDefault(); setIsMuted(!isMuted); }}
@@ -117,7 +108,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
               }
             }}>{banner.buttonText}</button>
           )}
-          
           {banner.image ? (
               <>
                 {!mediaLoaded && (
@@ -176,7 +166,6 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
           )}
         </div>
       )}
-
       <div className="categories">
         <div 
           className={`category-pill ${activeCategory === "Все" ? 'active' : ''}`}
@@ -194,11 +183,9 @@ export function HomeView({ products, openDetails, activeCategory, setActiveCateg
           </div>
         ))}
       </div>
-
       <div className="section-header">
         <h3 className="section-title">Каталог ({activeCategory})</h3>
       </div>
-
       <div className="products-grid">
         {displayedProducts.length === 0 ? (
           <div className="empty-state">

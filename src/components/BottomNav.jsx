@@ -1,6 +1,5 @@
 import React from 'react';
 import { Home, Heart, Layers, ShoppingBag, User } from 'lucide-react';
-
 export function BottomNav({ activeNav, handleNavClick, cartCount = 0, tgUser }) {
   return (
     <div className="bottom-nav">

@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowLeft, Heart } from 'lucide-react';
-
 export function FavoritesView({ products, openDetails, favorites, toggleFavorite, activeNav, handleNavClick, cartCount }) {
   return (
     <>
@@ -9,7 +8,6 @@ export function FavoritesView({ products, openDetails, favorites, toggleFavorite
         <div className="app-logo">Избранное</div>
         <div style={{width: 44}}></div>
       </header>
-
       <div className="products-grid" style={{marginTop: '20px'}}>
         {products.length === 0 ? (
           <div className="empty-state">

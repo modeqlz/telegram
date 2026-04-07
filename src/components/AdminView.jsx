@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronRight, ChevronLeft, User, Package, UploadCloud, Edit2, Trash2, X, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { CATEGORIES } from '../constants';
-
 export function AdminView({ products, addProduct, updateProduct, deleteProduct, goBack, banner, setBanner, showToast }) {
   const [adminTab, setAdminTab] = useState('orders');
   const [editingId, setEditingId] = useState(null);
   const [orders, setOrders] = useState([]);
-  
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -17,8 +15,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [usersList, setUsersList] = useState([]);
   const [clientSearchText, setClientSearchText] = useState('');
-
-  // Fetch orders or users from Supabase
   useEffect(() => {
     const fetchOrders = async () => {
       const { data, error } = await supabase
@@ -27,7 +23,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
         .order('created_at', { ascending: false });
       if (!error && data) setOrders(data);
     };
-
     const fetchUsers = async () => {
       const { data, error } = await supabase
         .from('users')
@@ -35,11 +30,9 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
         .order('last_visit', { ascending: false });
       if (!error && data) setUsersList(data);
     };
-
     if (adminTab === 'orders') fetchOrders();
     if (adminTab === 'clients') fetchUsers();
   }, [adminTab]);
-
   const updateOrderStatus = async (orderId, newStatus) => {
     const { error } = await supabase
       .from('orders')
@@ -50,7 +43,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
       showToast(`Статус обновлён: ${statusLabels[newStatus]}`);
     }
   };
-
   const statusLabels = {
     pending: 'Ожидает',
     confirmed: 'Подтверждён',
@@ -65,64 +57,48 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     delivered: '#22c55e',
     cancelled: '#ef4444'
   };
-
-
-  // Safe Banner Image/Video Upload to Supabase Storage
   const handleBannerImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const isVid = file.type.startsWith('video/');
       const fileExt = file.name.split('.').pop();
       const fileName = `banner_${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      
       try {
         const { error } = await supabase.storage
           .from('product-images')
           .upload(fileName, file);
-          
         if (error) {
           console.error("Banner upload error:", error);
           alert("Ошибка загрузки в Supabase. Проверьте права и лимиты.");
           return;
         }
-
         const { data } = supabase.storage
           .from('product-images')
           .getPublicUrl(fileName);
-
-        // Update banner state with the real Supabase URL
         setBanner({ ...banner, image: data.publicUrl, isVideo: isVid });
       } catch (err) {
         console.error("Upload failed", err);
       }
     }
   };
-
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    
     for (const file of files) {
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-        
         try {
-          // Upload to Supabase Storage
           const { error } = await supabase.storage
             .from('product-images')
             .upload(fileName, file);
-            
           if (error) {
             console.error("Upload error:", error);
             alert("Ошибка загрузки. Проверьте права доступа в Supabase RLS.");
             continue;
           }
-
-          // Get public URL
           const { data } = supabase.storage
             .from('product-images')
             .getPublicUrl(fileName);
-            
           setImages(prev => [...prev, data.publicUrl]);
         } catch (err) {
           console.error(err);
@@ -130,11 +106,9 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
       }
     }
   };
-
   const removeImage = (indexToRemove) => {
     setImages(images.filter((_, idx) => idx !== indexToRemove));
   };
-
   const startEdit = (product) => {
     setAdminTab('add_product');
     setEditingId(product.id);
@@ -146,7 +120,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     setImages(product.images || []);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
   const cancelEdit = () => {
     setEditingId(null);
     setName('');
@@ -156,26 +129,22 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     setSizesRaw('');
     setImages([]);
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     const sizes = sizesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    
     if (!name || !price || images.length === 0) {
       alert("Пожалуйста, заполните Имя, Цену и загрузите хотя бы 1 фото!");
       return;
     }
-
     const payload = {
       brand: "DVK Shop",
       name,
-      price: parseFloat(price.toString().replace(/\./g, '').replace(',', '.')),
+      price: parseFloat(price.toString().replace(/\s/g, '').replace(',', '.')),
       description,
       category,
       sizes,
       images
     };
-
     if (editingId) {
       updateProduct({ ...payload, id: editingId });
     } else {
@@ -184,7 +153,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
     cancelEdit();
     setAdminTab('list');
   };
-
   return (
     <div className="admin-page">
       <header className="header" style={{paddingLeft: 0, paddingRight: 0, background: 'transparent'}}>
@@ -192,7 +160,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
          <div className="app-logo" style={{fontSize: '1.2rem'}}>Настройки</div>
          <div style={{width: 44}}></div>
       </header>
-
       <div className="categories" style={{padding: '0 20px 24px', margin: '0 -20px', width: 'calc(100% + 40px)', display: 'flex', overflowX: 'auto', WebkitOverflowScrolling: 'touch'}}>
         <div className={`category-pill ${adminTab === 'orders' ? 'active' : ''}`} onClick={() => { setAdminTab('orders'); cancelEdit(); }}>
           Заказы {orders.filter(o => o.status === 'pending').length > 0 && `(${orders.filter(o => o.status === 'pending').length})`}
@@ -210,8 +177,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
           Баннер
         </div>
       </div>
-
-      {/* Clients Management */}
       {adminTab === 'clients' && (
         <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
           <div className="search-input-wrap" style={{width: '100%', marginBottom: '8px'}}>
@@ -225,7 +190,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
               style={{padding: '12px 12px 12px 40px', fontSize: '0.9rem'}}
             />
           </div>
-          
           <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
             {usersList.filter(u => {
                if(!clientSearchText) return true;
@@ -241,7 +205,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                   ) : (
                     <div style={{width: '46px', height: '46px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 700}}>{user.first_name ? user.first_name[0] : <User size={20}/>}</div>
                   )}
-                  {/* Status dot */}
                   <div style={{position: 'absolute', bottom: 0, right: -2, width: '12px', height: '12px', borderRadius: '50%', background: (new Date() - new Date(user.last_visit)) < 15 * 60000 ? '#22c55e' : '#6b7280', border: '2px solid var(--card-bg)'}}></div>
                 </div>
                 <div style={{flex: 1}}>
@@ -282,8 +245,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
           </div>
         </div>
       )}
-
-      {/* Orders Management */}
       {adminTab === 'orders' && (
         <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
           {orders.length === 0 ? (
@@ -293,7 +254,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             </div>
           ) : orders.map(order => (
             <div key={order.id} style={{background: 'var(--card-bg)', borderRadius: 'var(--radius-lg)', padding: '16px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)'}}>
-              {/* Order header */}
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
                 <div>
                   <div style={{fontWeight: 700, fontSize: '1rem'}}>{order.telegram_name || 'Покупатель'}</div>
@@ -325,8 +285,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                   {statusLabels[order.status] || order.status}
                 </div>
               </div>
-
-              {/* Order items */}
               <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
                 {(order.items || []).map((item, idx) => (
                   <div key={idx} style={{display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem'}}>
@@ -340,14 +298,10 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                   </div>
                 ))}
               </div>
-
-              {/* Order total & date */}
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '10px', marginBottom: '12px'}}>
                 <div style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>{new Date(order.created_at).toLocaleString('ru-RU')}</div>
                 <div style={{fontWeight: 700, fontSize: '1.05rem'}}>{order.total} ₽</div>
               </div>
-
-              {/* Status actions */}
               {order.status !== 'delivered' && order.status !== 'cancelled' && (
                 <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
                   {order.status === 'pending' && (
@@ -376,12 +330,9 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
           ))}
         </div>
       )}
-
-      {/* Banner Configuration Card */}
       {adminTab === 'banner' && (
         <div className="admin-card" style={{marginBottom: '24px'}}>
           <h3 style={{marginBottom: '16px', fontSize: '1.1rem', fontWeight: 700}}>Главный баннер</h3>
-          
           <div className="form-group">
             <label className="form-label">Заголовок баннера (Enter - новая строка)</label>
             <textarea 
@@ -391,7 +342,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
               onChange={e => setBanner({...banner, title: e.target.value})} 
             />
           </div>
-
           <div className="form-group">
             <label className="form-label">Текст на кнопке</label>
             <input 
@@ -401,7 +351,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
               onChange={e => setBanner({...banner, buttonText: e.target.value})} 
             />
           </div>
-
           <div className="form-group">
             <label className="form-label">Куда ведет клик по баннеру (Ссылка)</label>
             <select 
@@ -416,7 +365,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
               ))}
             </select>
           </div>
-
           <div className="form-group" style={{marginBottom: 0}}>
             <label className="form-label">GIF, PNG или видео (MP4) для баннера</label>
             <div className="upload-dropzone" style={{padding: '20px'}}>
@@ -453,8 +401,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
           </div>
         </div>
       )}
-
-      {/* Product Editor form */}
       {adminTab === 'add_product' && (
       <form onSubmit={handleSubmit} className="admin-card">
         <h3 style={{marginBottom: '16px', fontSize: '1.1rem', fontWeight: 700}}>
@@ -475,7 +421,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             <div style={{fontSize: '0.9rem', fontWeight: 500}}>Нажмите или перетащите файлы</div>
             <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>PNG, JPG(JPEG)</div>
           </div>
-
           {images.length > 0 && (
             <div className="image-preview-grid">
               {images.map((imgSrc, idx) => (
@@ -575,7 +520,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             </div>
           )}
         </div>
-
         <div className="form-group">
           <label className="form-label">Название товара</label>
           <input 
@@ -587,7 +531,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             required
           />
         </div>
-
         <div className="row-group">
           <div className="form-group">
             <label className="form-label">Категория</label>
@@ -603,15 +546,15 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             <label className="form-label">Цена (₽)</label>
             <input 
               type="text" 
+              inputMode="decimal"
               className="form-input" 
               value={price} 
               onChange={e => setPrice(e.target.value)} 
-              placeholder="Пример: 24,890"
+              placeholder="Пример: 24890"
               required
             />
           </div>
         </div>
-
         <div className="form-group">
           <label className="form-label">Размеры (через запятую)</label>
            <input 
@@ -622,7 +565,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             placeholder="Например: S, M, L  или  39, 40"
           />
         </div>
-
         <div className="form-group">
           <label className="form-label">Описание</label>
           <textarea 
@@ -632,7 +574,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
             placeholder="Подробное описание товара..."
           />
         </div>
-
         <button type="submit" className="btn-primary">
           {editingId ? "Сохранить изменения" : "Опубликовать товар"}
         </button>
@@ -643,8 +584,6 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
         )}
       </form>
       )}
-
-      {/* List of Ads */}
       {adminTab === 'list' && (
         <div className="ads-list">
           <h3 style={{marginBottom: '16px', fontSize: '1.2rem', fontWeight: 700}}>Мои объявления ({products.length})</h3>

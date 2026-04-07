@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from 'react';
-
 export function SplashScreen({ onFinish, userName }) {
-  const [phase, setPhase] = useState('hold'); // hold -> exit
-
+  const [phase, setPhase] = useState('hold');
   useEffect(() => {
-    // Remove the pre-rendered static HTML splash screen if it exists
     const initialSplash = document.getElementById('initial-splash');
     if (initialSplash) {
       initialSplash.remove();
     }
-
     const exitTimer = setTimeout(() => setPhase('exit'), 2300);
     const doneTimer = setTimeout(() => onFinish(), 2900);
-
     return () => {
       clearTimeout(exitTimer);
       clearTimeout(doneTimer);
     };
   }, [onFinish]);
-
   return (
     <div className={`splash-screen ${phase}`}>
       <div className="splash-content">
