@@ -93,7 +93,7 @@ export function ProfileView({ tgUser, isAdmin, openAdmin }) {
                       </div>
                       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <div style={{fontSize: '0.85rem'}}>{(order.items || []).length} товар{(order.items || []).length > 4 ? 'ов' : (order.items || []).length > 1 ? 'а' : ''}</div>
-                        <div style={{fontWeight: 700}}>{order.total} ₽</div>
+                        <div style={{fontWeight: 700}}>{Number(order.total).toLocaleString('de-DE')} ₽</div>
                       </div>
                     </div>
                   ))}

@@ -238,7 +238,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                   </div>
                   <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center'}}>
                     <span>{user.username ? `@${user.username}` : `ID: ${user.telegram_id}`}</span>
-                    <span style={{fontWeight: 600, color: 'var(--text-main)', background: 'var(--surface-elevated)', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: '6px', display: 'inline-block'}}>Баланс: {user.balance || 0} ₽</span>
+                    <span style={{fontWeight: 600, color: 'var(--text-main)', background: 'var(--surface-elevated)', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: '6px', display: 'inline-block'}}>Баланс: {Number(user.balance || 0).toLocaleString('de-DE')} ₽</span>
                   </div>
                 </div>
                 <button 
@@ -318,13 +318,13 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                       {item.size && <span style={{color: 'var(--text-muted)'}}> • {item.size}</span>}
                     </div>
                     <span style={{color: 'var(--text-muted)'}}>{item.qty}x</span>
-                    <span style={{fontWeight: 600}}>{Number(item.price) * item.qty} ₽</span>
+                    <span style={{fontWeight: 600}}>{(Number(item.price) * item.qty).toLocaleString('de-DE')} ₽</span>
                   </div>
                 ))}
               </div>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '10px', marginBottom: '12px'}}>
                 <div style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>{new Date(order.created_at).toLocaleString('ru-RU')}</div>
-                <div style={{fontWeight: 700, fontSize: '1.05rem'}}>{order.total} ₽</div>
+                <div style={{fontWeight: 700, fontSize: '1.05rem'}}>{Number(order.total).toLocaleString('de-DE')} ₽</div>
               </div>
               {order.status !== 'delivered' && order.status !== 'cancelled' && (
                 <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
@@ -621,7 +621,7 @@ export function AdminView({ products, addProduct, updateProduct, deleteProduct, 
                <img src={product.images && product.images.length > 0 ? product.images[0] : ""} alt="" className="ad-item-img" />
                <div className="ad-item-info">
                  <div className="ad-item-title">{product.name}</div>
-                 <div className="ad-item-price">{Number(product.price)} ₽</div>
+                 <div className="ad-item-price">{Number(product.price).toLocaleString('de-DE')} ₽</div>
                </div>
                <div className="ad-item-actions">
                   <button className="action-btn" title="Редактировать" onClick={() => startEdit(product)}>

@@ -86,7 +86,7 @@ export function CartView({ cartItems, setCartItems, goBack, activeNav, handleNav
                     </div>
                     {item.selectedSize && <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px'}}>Размер: {item.selectedSize}</div>}
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px'}}>
-                      <div style={{fontWeight: 700}}>{Number(item.price)} ₽</div>
+                      <div style={{fontWeight: 700}}>{Number(item.price).toLocaleString('de-DE')} ₽</div>
                       <div style={{display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--surface-elevated)', padding: '4px 8px', borderRadius: '100px'}}>
                         <button onClick={() => updateQty(item.cartId, -1)} style={{background: 'none', border: 'none'}}><Minus size={14}/></button>
                         <span style={{fontSize: '0.9rem', fontWeight: 600, minWidth: '16px', textAlign: 'center'}}>{item.qty}</span>
@@ -100,7 +100,7 @@ export function CartView({ cartItems, setCartItems, goBack, activeNav, handleNav
             <div style={{marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '24px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 700, marginBottom: '24px'}}>
                 <span>К оплате:</span>
-                <span>{total} ₽</span>
+                <span>{total.toLocaleString('de-DE')} ₽</span>
               </div>
               <button 
                 className="btn-primary" 

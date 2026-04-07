@@ -279,7 +279,7 @@ export function DressupView({ products, addToCart, showToast }) {
               </div>
               <div style={{ width: '100%', textAlign: 'center' }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.2, color: 'var(--text-main)' }}>{previewProduct.item.name}</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{Number(previewProduct.item.price)} ₽</p>
+                <p style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{Number(previewProduct.item.price).toLocaleString('de-DE')} ₽</p>
                 <div onClick={() => setDescExpanded(!descExpanded)} style={{ cursor: 'pointer', background: 'var(--surface-elevated)', padding: '12px', borderRadius: '12px' }}>
                   <p style={{ 
                     margin: 0, fontSize: '0.95rem', color: 'var(--text-muted)', textAlign: 'left', lineHeight: 1.4,
@@ -347,7 +347,7 @@ export function DressupView({ products, addToCart, showToast }) {
           </div>
           <div className="outfit-info">
             <div className="count">{itemCount} {itemCount === 1 ? 'вещь' : itemCount < 5 ? 'вещи' : 'вещей'}</div>
-            <div className="total">{outfitTotal.toLocaleString()} ₽</div>
+            <div className="total">{outfitTotal.toLocaleString('de-DE')} ₽</div>
           </div>
           <button className="outfit-buy-btn" onClick={handleBuyOutfit}>
             <ShoppingBag size={16} style={{ marginRight: '6px', verticalAlign: '-2px' }} />

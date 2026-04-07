@@ -42,7 +42,7 @@ export function DetailsView({ product, goBack, favorites, toggleFavorite, addToC
       <div className="info-section">
         <div className="details-brand">{product.brand || "DVK Shop"}</div>
         <h1 className="details-name">{product.name}</h1>
-        <div className="details-price">{Number(product.price)} ₽</div>
+        <div className="details-price">{Number(product.price).toLocaleString('de-DE')} ₽</div>
         <div className="options-row">          
           {product.sizes && product.sizes.length > 0 && (
             <div className="option-group">

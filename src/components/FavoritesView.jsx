@@ -28,7 +28,7 @@ export function FavoritesView({ products, openDetails, favorites, toggleFavorite
                 <div className="product-brand">{product.brand || "DVK Shop"}</div>
                 <div className="product-name">{product.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                  <div className="product-price" style={{marginTop: 0}}>{Number(product.price)} ₽</div>
+                  <div className="product-price" style={{marginTop: 0}}>{Number(product.price).toLocaleString('de-DE')} ₽</div>
                   <button 
                     className={`fav-btn-inline ${favorites.includes(product.id) ? 'active' : ''}`}
                     onClick={(e) => toggleFavorite(e, product.id)}
